@@ -37,7 +37,7 @@ insert(database, "sources", { id: "source-indiana", publisher: "Indiana", kind: 
 insert(database, "source_locations", { source_id: "source-indiana", location_id: "indiana" });
 insert(database, "documents", { id: "doc", source_id: "source-indiana", canonical_url: "https://example.gov/document", title: "Official record", published_at: "2026-07-18" });
 insertEvidence(database, { id: "evidence", document_id: "doc", ordinal: 1, quote: "The official record documents the action.", canonicalUrl: "https://example.gov/document", page_number: 2 });
-insert(database, "updates", { id: "update", document_id: "doc", location_id: "indiana", title: "State update", published_at: "2026-07-18" });
+insert(database, "updates", { id: "update", document_id: "doc", location_id: "indiana", update_type: "policy", title: "State update", published_at: "2026-07-18" });
 assert.equal(projectEvidenceForLocation(database, "indy").length, 1);
 assert.equal(projectEvidenceForLocation(database, "federal").length, 0);
 assertDatabaseIntegrity(database);
