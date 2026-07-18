@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: Phase 1 — Evidence Foundation
 status: planning
-stopped_at: Phase 1 planned and verified
-last_updated: "2026-07-18T06:48:07.349Z"
+stopped_at: Phase 1 verified; ready for Phase 2
+last_updated: "2026-07-18T07:28:02.117Z"
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 0
+  completed_plans: 3
 ---
 
 # Project State: Lamplighter
@@ -53,6 +53,6 @@ Plan Phase 1: establish the offline SQLite evidence contract and deterministic s
 
 ## Session
 
-**Last session:** 2026-07-18T06:48:07.341Z
-**Stopped at:** Phase 1 planned and verified
-**Resume file:** .planning/phases/01-evidence-foundation/01-01-PLAN.md
+**Last session:** 2026-07-18T07:28:02.109Z
+**Stopped at:** Phase 1 verified; ready for Phase 2
+**Resume file:** .planning/ROADMAP.md
