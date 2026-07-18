@@ -39,3 +39,29 @@ export type DemoSeed = {
   coverage: DemoCoverage[];
   records: EvidenceRecord[];
 };
+
+export type AnswerBlock = {
+  text: string;
+  evidenceIds: string[];
+};
+
+export type GroundedAnswer =
+  | { status: "answered"; blocks: [AnswerBlock, ...AnswerBlock[]] }
+  | { status: "insufficient"; blocks: [] };
+
+export type ChatProviderStatus =
+  | { kind: "bundled"; label: "Bundled demo answer" }
+  | { kind: "live"; provider: "OpenAI" | "Anthropic" | "Gemini" }
+  | { kind: "unavailable" }
+  | { kind: "failed"; provider: "OpenAI" | "Anthropic" | "Gemini"; errorType: string };
+
+export type ChatTurn = {
+  question: string;
+  coverageId: string;
+  answer: GroundedAnswer;
+  provider: ChatProviderStatus;
+  packetCount: number;
+  createdAt: string;
+};
+
+export type ChatThreads = Record<string, ChatTurn[]>;
