@@ -1,3 +1,18 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+current_phase: Phase 1 — Evidence Foundation
+status: planning
+stopped_at: Phase 1 context gathered
+last_updated: "2026-07-18T06:28:08.981Z"
+progress:
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+---
+
 # Project State: Lamplighter
 
 ## Current Position
@@ -35,3 +50,9 @@ Plan Phase 1: establish the offline SQLite evidence contract and deterministic s
 
 ---
 *State initialized: 2026-07-18*
+
+## Session
+
+**Last session:** 2026-07-18T06:28:08.973Z
+**Stopped at:** Phase 1 context gathered
+**Resume file:** .planning/phases/01-evidence-foundation/01-CONTEXT.md
