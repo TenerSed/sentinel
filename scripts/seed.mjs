@@ -117,6 +117,8 @@ export function validateFixture(fixture = loadFixture()) {
     if (!sourceById.has(record.sourceId) || !locations.has(record.locationId) || !permitted.has(`${record.sourceId}:${record.locationId}`)) throw new Error(`${record.id}: source is not configured for its location`);
     if (record.sourceKind !== sourceById.get(record.sourceId).kind) throw new Error(`${record.id}: source kind mismatch`);
     if (!["legislation", "office_holder", "policy"].includes(record.updateType)) throw new Error(`${record.id}: invalid update type`);
+    if (!["civic_update", "recent_public_position"].includes(record.evidenceKind)) throw new Error(`${record.id}: invalid evidence kind`);
+    if (record.evidenceKind === "recent_public_position" && !["government_record", "video_transcript"].includes(record.sourceKind)) throw new Error(`${record.id}: recent public position needs a primary record or transcript`);
     sourceKinds.add(record.sourceKind);
     if (typeof record.title !== "string" || typeof record.sourceTitle !== "string" || !record.title || !record.sourceTitle) throw new Error(`${record.id}: titles are required`);
     assertTimestamp(record.publishedAt, `${record.id}: publishedAt`);
@@ -155,7 +157,7 @@ function writeDatabase(fixture) {
         const evidenceId = `evidence-${record.id}`;
         const claimId = `claim-${record.id}`;
         insert(database, "documents", { id: documentId, source_id: record.sourceId, canonical_url: record.canonicalUrl, title: record.sourceTitle, published_at: record.publishedAt, retrieved_at: record.retrievedAt, content_hash: record.contentHash, raw_text: record.rawPath?.endsWith(".txt") ? raw.toString("utf8") : null });
-        insertEvidence(database, { id: evidenceId, document_id: documentId, ordinal: 1, quote: record.quote, canonicalUrl: record.canonicalUrl, page_number: record.locator.pageNumber ?? null, start_seconds: record.locator.startSeconds ?? null, end_seconds: record.locator.endSeconds ?? null });
+        insertEvidence(database, { id: evidenceId, document_id: documentId, ordinal: 1, quote: record.quote, evidence_kind: record.evidenceKind, canonicalUrl: record.canonicalUrl, page_number: record.locator.pageNumber ?? null, start_seconds: record.locator.startSeconds ?? null, end_seconds: record.locator.endSeconds ?? null });
         insert(database, "updates", { id: record.id, document_id: documentId, location_id: record.locationId, update_type: record.updateType, title: record.title, published_at: record.publishedAt });
         insert(database, "claims", { id: claimId, update_id: record.id, text: record.quote });
         insert(database, "claim_evidence", { claim_id: claimId, evidence_id: evidenceId });

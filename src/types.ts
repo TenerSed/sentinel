@@ -11,6 +11,7 @@ export type DemoCoverage = {
 };
 
 export type UpdateType = "legislation" | "office_holder" | "policy";
+export type EvidenceKind = "civic_update" | "recent_public_position";
 
 export type EvidenceLocator =
   | { kind: "page"; pageNumber: number }
@@ -21,6 +22,7 @@ export type EvidenceRecord = {
   locationId: string;
   locationLabel: string;
   updateType: UpdateType;
+  evidenceKind: EvidenceKind;
   sourceKind: SourceKind;
   publisher: string;
   sourceTitle: string;

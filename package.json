@@ -4,10 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node server/app.mjs",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "demo": "node scripts/validate-seed.mjs && vite",
+    "demo": "node scripts/validate-seed.mjs && node server/app.mjs",
     "seed": "node scripts/seed.mjs",
     "validate:contract": "node scripts/evidence-contract-check.mjs",
     "validate:seed": "node scripts/validate-seed.mjs",

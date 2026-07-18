@@ -32,7 +32,7 @@ function assertSeedMatchesDatabase(database, fixture) {
   const databaseRecords = database.prepare(`
     SELECT u.id, u.location_id AS locationId, l.label AS locationLabel, u.update_type AS updateType,
       s.kind AS sourceKind, s.publisher AS publisher, d.title AS sourceTitle, u.title, u.published_at AS publishedAt,
-      d.canonical_url AS canonicalUrl, e.quote AS exactQuote, e.page_number AS pageNumber,
+      d.canonical_url AS canonicalUrl, e.quote AS exactQuote, e.evidence_kind AS evidenceKind, e.page_number AS pageNumber,
       e.start_seconds AS startSeconds, e.end_seconds AS endSeconds
     FROM updates u JOIN documents d ON d.id = u.document_id JOIN sources s ON s.id = d.source_id
       JOIN locations l ON l.id = u.location_id JOIN evidence e ON e.document_id = d.id
@@ -42,11 +42,12 @@ function assertSeedMatchesDatabase(database, fixture) {
   for (let index = 0; index < databaseRecords.length; index += 1) {
     const expected = databaseRecords[index];
     const actual = seed.records[index];
-    if (!actual || actual.id !== expected.id || actual.locationId !== expected.locationId || actual.locationLabel !== expected.locationLabel || actual.updateType !== expected.updateType || actual.sourceKind !== expected.sourceKind || actual.publisher !== expected.publisher || actual.sourceTitle !== expected.sourceTitle || actual.title !== expected.title || actual.publishedAt !== expected.publishedAt || actual.canonicalUrl !== expected.canonicalUrl || actual.exactQuote !== expected.exactQuote) {
+    if (!actual || actual.id !== expected.id || actual.locationId !== expected.locationId || actual.locationLabel !== expected.locationLabel || actual.updateType !== expected.updateType || actual.sourceKind !== expected.sourceKind || actual.publisher !== expected.publisher || actual.sourceTitle !== expected.sourceTitle || actual.title !== expected.title || actual.publishedAt !== expected.publishedAt || actual.canonicalUrl !== expected.canonicalUrl || actual.exactQuote !== expected.exactQuote || actual.evidenceKind !== expected.evidenceKind) {
       throw new Error(`generated demo seed record ${expected.id} disagrees with SQLite`);
     }
     validateEvidence({ quote: actual.exactQuote, canonicalUrl: actual.canonicalUrl, pageNumber: actual.locator?.pageNumber, startSeconds: actual.locator?.startSeconds, endSeconds: actual.locator?.endSeconds });
     if (!["legislation", "office_holder", "policy"].includes(actual.updateType)) throw new Error(`${actual.id}: generated seed has invalid update type`);
+    if (!["civic_update", "recent_public_position"].includes(actual.evidenceKind)) throw new Error(`${actual.id}: generated seed has invalid evidence kind`);
     if (Object.hasOwn(actual, "rawText") || Object.hasOwn(actual, "contentHash")) throw new Error(`${actual.id}: generated seed exposes server-only data`);
   }
   if (!["legislation", "office_holder", "policy"].every((type) => seed.records.some((record) => record.updateType === type))) {

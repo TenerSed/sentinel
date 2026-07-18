@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS evidence (
   document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
   ordinal INTEGER NOT NULL,
   quote TEXT NOT NULL,
+  evidence_kind TEXT NOT NULL CHECK (evidence_kind IN ('civic_update', 'recent_public_position')),
   page_number INTEGER,
   start_seconds INTEGER,
   end_seconds INTEGER,
@@ -145,6 +146,7 @@ export function insertEvidence(database, row) {
     startSeconds: row.start_seconds,
     endSeconds: row.end_seconds,
   });
+  if (!['civic_update', 'recent_public_position'].includes(row.evidence_kind)) throw new Error("evidence kind is invalid");
   insert(database, "evidence", evidenceRow);
 }
 
@@ -170,6 +172,7 @@ export function projectEvidenceForLocation(database, locationId) {
       u.published_at AS publishedAt,
       d.canonical_url AS canonicalUrl,
       e.quote AS exactQuote,
+      e.evidence_kind AS evidenceKind,
       e.page_number AS pageNumber,
       e.start_seconds AS startSeconds,
       e.end_seconds AS endSeconds
