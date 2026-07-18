@@ -60,6 +60,19 @@ Lamplighter ships as a reliable, offline-runnable civic-intelligence demo. The w
 3. Each item gives a plain “why this” explanation without ideology inference or unnecessary activity retention.
 4. Users can reset their local personalization history.
 
+### Phase 04.1: Local Account Settings (INSERTED)
+
+**Goal:** Consolidate local, transparent user controls into an Account tab without adding accounts or broadening retrieval.
+**Requirements:** SET-01, SET-02, SET-03
+**Depends on:** Phase 4
+**Plans:** 0 plans
+
+**Success criteria:**
+
+1. A fourth Account tab exposes only local preferences and status; it never asks for sign-in or stores a server profile.
+2. Users can manage coverage, Curated topics, and personalization reset from Account while Chat history remains independent.
+3. Account explains local data handling and optional provider availability without exposing secrets or adding source expansion, document RAG, or provider configuration.
+
 ### Phase 5: Submission Hardening
 
 **Goal:** Make the three-view product accessible, testable, documented, and dependable for judges.

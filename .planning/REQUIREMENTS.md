@@ -49,6 +49,12 @@
 - [ ] **PROD-03**: The repository includes a complete README with the no-key demo path, optional live rebuild path, bundled-data provenance, limitations, and specific Codex/GPT-5.6 contributions.
 - [ ] **PROD-04**: The repository includes an MIT license, source-aware demo data, and automated checks for evidence/citation validation, location scoping, and personalization reset behavior.
 
+### Local Settings
+
+- [ ] **SET-01**: A user can open an Account tab that manages local-only Lamplighter preferences without an account, authentication, or server-side profile.
+- [ ] **SET-02**: A user can change the active coverage, manage Curated topics, and reset local personalization from Account while preserving Chat history unless they explicitly clear it.
+- [ ] **SET-03**: Account makes local data handling and optional provider availability clear without exposing, collecting, or configuring secrets in the browser.
+
 ## v2 Requirements
 
 ### Scale & Coverage
@@ -100,11 +106,14 @@
 | PROD-02 | Phase 5 | Pending |
 | PROD-03 | Phase 5 | Pending |
 | PROD-04 | Phase 5 | Pending |
+| SET-01 | Phase 04.1 | Pending |
+| SET-02 | Phase 04.1 | Pending |
+| SET-03 | Phase 04.1 | Pending |
 
 **Coverage:**
 
-- v1 requirements: 26 total
-- Mapped to phases: 26
+- v1 requirements: 29 total
+- Mapped to phases: 29
 - Unmapped: 0
 
 ---
