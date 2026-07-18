@@ -1,95 +1,95 @@
-import { useMemo, useState } from "react";
-import { signals } from "./data";
-import type { Signal, SignalLevel } from "./types";
+import { useEffect, useMemo, useState } from "react";
+import { demoSeed } from "./demo-seed";
+import type { DemoSeed, EvidenceLocator, EvidenceRecord, SourceKind } from "./types";
 
-const levelClass: Record<SignalLevel, string> = {
-  High: "level-high",
-  Medium: "level-medium",
-  Low: "level-low",
+type SeedState = { status: "loading" } | { status: "error"; diagnostic: string } | { status: "ready"; seed: DemoSeed };
+
+const sourceLabel: Record<SourceKind, string> = {
+  government_record: "Primary record",
+  video_transcript: "Primary record",
+  reporting: "Reporting",
 };
 
-function SignalCard({ signal, selected, onSelect }: { signal: Signal; selected: boolean; onSelect: () => void }) {
-  return (
-    <button className={`signal-card ${selected ? "selected" : ""}`} onClick={onSelect}>
-      <div className="card-topline">
-        <span className={`level-dot ${levelClass[signal.level]}`} />
-        <span>{signal.board}</span>
-        <time>{signal.date}</time>
-      </div>
-      <h3>{signal.title}</h3>
-      <p>{signal.body}</p>
-      <div className="tag-row">
-        {signal.tags.slice(0, 2).map((tag) => <span className="tag" key={tag}>{tag}</span>)}
-        <span className="stage">{signal.stage}</span>
-      </div>
-    </button>
-  );
+function locatorText(locator: EvidenceLocator) {
+  if (locator.kind === "page") return `p. ${locator.pageNumber}`;
+  return `${Math.floor(locator.startSeconds / 60)}:${String(locator.startSeconds % 60).padStart(2, "0")}`;
+}
+
+function dateText(value: string) {
+  return new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(value));
+}
+
+function validateSeed(seed: unknown): DemoSeed {
+  if (!seed || typeof seed !== "object") throw new Error("Bundled seed is not an object.");
+  const candidate = seed as Partial<DemoSeed>;
+  if (candidate.version !== 1 || !Array.isArray(candidate.locations) || !Array.isArray(candidate.records)) throw new Error("Bundled seed has an unsupported shape.");
+  for (const record of candidate.records) {
+    if (!record || typeof record !== "object") throw new Error("Bundled seed contains an unreadable record.");
+    const item = record as Partial<EvidenceRecord>;
+    if (![item.id, item.locationId, item.locationLabel, item.publisher, item.sourceTitle, item.title, item.publishedAt, item.canonicalUrl, item.exactQuote].every((value) => typeof value === "string" && value.trim())) throw new Error("Bundled seed record is missing required evidence fields.");
+    const url = item.canonicalUrl as string;
+    const quote = item.exactQuote as string;
+    if (!["government_record", "video_transcript", "reporting"].includes(item.sourceKind ?? "") || !url.startsWith("https://") || quote.trim().split(/\s+/).length > 25) throw new Error("Bundled seed record did not pass evidence validation.");
+    if (!item.locator || (item.locator.kind === "page" && (!Number.isInteger(item.locator.pageNumber) || item.locator.pageNumber < 1)) || (item.locator.kind === "timestamp" && (!Number.isInteger(item.locator.startSeconds) || item.locator.startSeconds < 0))) throw new Error("Bundled seed record is missing a reliable locator.");
+  }
+  return candidate as DemoSeed;
 }
 
 export default function App() {
-  const [selectedId, setSelectedId] = useState(signals[0].id);
-  const [filter, setFilter] = useState<"All" | SignalLevel>("All");
-  const [query, setQuery] = useState("");
-  const selected = signals.find((signal) => signal.id === selectedId) ?? signals[0];
-  const filtered = useMemo(() => signals.filter((signal) => {
-    const matchesFilter = filter === "All" || signal.level === filter;
-    const haystack = `${signal.title} ${signal.body} ${signal.tags.join(" ")}`.toLowerCase();
-    return matchesFilter && haystack.includes(query.toLowerCase());
-  }), [filter, query]);
+  const [state, setState] = useState<SeedState>({ status: "loading" });
+  const [selectedId, setSelectedId] = useState<string>();
+  const [copyError, setCopyError] = useState(false);
 
-  return (
-    <main className="app-shell">
-      <aside className="sidebar">
-        <div className="brand"><span className="brand-mark">S</span><span>Sentinel</span></div>
-        <div className="workspace-label">WORKSPACE</div>
-        <div className="workspace">Atlas Compute <span>⌄</span></div>
-        <nav>
-          <a className="nav-item active" href="#radar"><span>◈</span> Intelligence radar</a>
-          <a className="nav-item" href="#sources"><span>▤</span> Source coverage</a>
-          <a className="nav-item" href="#alerts"><span>◉</span> Alert rules</a>
-          <a className="nav-item" href="#reports"><span>▱</span> Reports</a>
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="watching"><span className="pulse" /> Watching 3 bodies</div>
-          <button className="profile-button">AC <span>Profile settings</span></button>
-        </div>
-      </aside>
+  useEffect(() => {
+    try {
+      const seed = validateSeed(demoSeed);
+      setState({ status: "ready", seed });
+      setSelectedId(seed.records[0]?.id);
+    } catch (error) {
+      setState({ status: "error", diagnostic: error instanceof Error ? error.message : String(error) });
+    }
+  }, []);
 
-      <section className="content" id="radar">
-        <header className="topbar">
-          <div><p className="eyebrow">INDIANAPOLIS / MARION COUNTY</p><h1>Intelligence radar</h1></div>
-          <div className="topbar-actions"><button className="icon-button">⌕</button><button className="primary-button">+ Create report</button></div>
-        </header>
+  const selected = state.status === "ready" ? state.seed.records.find((record) => record.id === selectedId) ?? state.seed.records[0] : undefined;
+  const counts = useMemo(() => state.status !== "ready" ? null : {
+    coverage: new Set(state.seed.records.map((record) => record.locationId)).size,
+    primary: state.seed.records.filter((record) => record.sourceKind !== "reporting").length,
+    timestamps: state.seed.records.filter((record) => record.locator.kind === "timestamp").length,
+  }, [state]);
 
-        <section className="brief-card">
-          <div className="brief-symbol">✦</div>
-          <div><p className="eyebrow accent">THIS WEEK'S BRIEF</p><h2>The zoning conversation is moving from principles to process.</h2><p>New signals point to a more formal review path for data-center development, with infrastructure capacity and public hearings at the center.</p></div>
-          <button className="brief-button">Read brief <span>→</span></button>
-        </section>
+  if (state.status === "loading") return <main className="state-page" aria-live="polite">Validating bundled evidence…</main>;
+  if (state.status === "error") return <main className="state-page error-state"><h1>Bundled evidence could not be validated.</h1><p>This demo will not fetch or rebuild data automatically. Check the seed diagnostics, then run the documented seed command.</p><pre>{state.diagnostic}</pre></main>;
+  if (!state.seed.records.length) return <main className="state-page"><h1>No verified evidence loaded</h1><p>This demo only displays records with a stored quote, public URL, and reliable locator. Add a valid bundled seed to inspect records.</p></main>;
 
-        <section className="metrics">
-          <div className="metric"><span>NEW SIGNALS</span><strong>04</strong><small>↑ 2 since last week</small></div>
-          <div className="metric"><span>HIGH PRIORITY</span><strong>02</strong><small>Needs review today</small></div>
-          <div className="metric"><span>UPCOMING MEETINGS</span><strong>03</strong><small>Next: Jul 22, 1:00 PM</small></div>
-        </section>
-
-        <section className="radar-grid">
-          <div className="signal-list-panel">
-            <div className="section-heading"><div><p className="eyebrow">MONITORED POLICY DEVELOPMENTS</p><h2>Signals requiring attention</h2></div><span className="count">{filtered.length} signals</span></div>
-            <div className="filter-row"><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search signals" />{(["All", "High", "Medium"] as const).map((item) => <button key={item} className={`filter ${filter === item ? "filter-active" : ""}`} onClick={() => setFilter(item)}>{item}</button>)}</div>
-            <div className="signal-list">{filtered.map((signal) => <SignalCard key={signal.id} signal={signal} selected={signal.id === selected.id} onSelect={() => setSelectedId(signal.id)} />)}{filtered.length === 0 && <p className="empty">No matching signals.</p>}</div>
-          </div>
-
-          <aside className="detail-panel">
-            <div className="detail-header"><span className={`level-pill ${levelClass[selected.level]}`}>{selected.level} priority</span><button className="more-button">•••</button></div>
-            <p className="eyebrow">{selected.board}</p><h2>{selected.title}</h2><div className="detail-meta"><span>{selected.date}</span><span>•</span><span>{selected.stage}</span></div>
-            <div className="relevance"><p className="eyebrow accent">WHY THIS MATTERS</p><p>{selected.relevance}</p></div>
-            <div className="tags-full">{selected.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
-            <div className="citations"><p className="eyebrow">SOURCE EVIDENCE</p>{selected.citations.map((citation) => <a key={citation.label} href={citation.url} target="_blank" rel="noreferrer" className="citation"><span className="citation-icon">↗</span><span><strong>{citation.label}</strong><small>{citation.page} · “{citation.excerpt}”</small></span></a>)}</div>
-            <button className="outline-button">View original record <span>→</span></button>
-          </aside>
-        </section>
-      </section>
-    </main>
-  );
+  const citation = selected && `${selected.sourceTitle} · ${locatorText(selected.locator)}`;
+  return <main className="inspector-shell">
+    <header className="inspector-header">
+      <p className="eyebrow">LAMPLIGHTER / OFFLINE DEMO</p>
+      <h1>Evidence inspector</h1>
+      <p>Verified public records bundled for Indianapolis, Indiana, and U.S. federal coverage.</p>
+      <div className="seed-status"><span aria-hidden="true" />Seed ready · offline · no API key required</div>
+    </header>
+    <section className="seed-counts" aria-label="Bundled evidence summary">
+      <div><span>Records</span><strong>{state.seed.records.length}</strong></div><div><span>Coverage</span><strong>{counts?.coverage}</strong></div><div><span>Primary records</span><strong>{counts?.primary}</strong></div><div><span>Timestamp evidence</span><strong>{counts?.timestamps}</strong></div>
+    </section>
+    <section className="evidence-grid" aria-label="Evidence inspector">
+      <nav className="record-list" aria-label="Verified evidence records">
+        <div className="panel-heading"><p className="eyebrow">BUNDLED EVIDENCE</p><h2>{state.seed.records.length} verified {state.seed.records.length === 1 ? "record" : "records"}</h2></div>
+        {state.seed.records.map((record) => <button type="button" key={record.id} className={`record-row ${record.id === selected?.id ? "selected" : ""}`} aria-pressed={record.id === selected?.id} onClick={() => { setSelectedId(record.id); setCopyError(false); }}>
+          <span className="record-meta">{record.locationLabel} · {sourceLabel[record.sourceKind]} · <time dateTime={record.publishedAt}>{dateText(record.publishedAt)}</time></span>
+          <strong>{record.title}</strong><span className="record-locator">{locatorText(record.locator)}</span>
+        </button>)}
+      </nav>
+      {selected && <article className="detail-panel">
+        <p className="eyebrow">{selected.locationLabel} · {sourceLabel[selected.sourceKind]}</p>
+        <h2>{selected.title}</h2>
+        <dl className="detail-meta"><div><dt>Publisher</dt><dd>{selected.publisher}</dd></div><div><dt>Published</dt><dd><time dateTime={selected.publishedAt}>{dateText(selected.publishedAt)}</time></dd></div></dl>
+        {selected.sourceKind === "reporting" && <p className="reporting-label">Reporting, not the primary record</p>}
+        <section className="quote-block"><p className="eyebrow">EXACT SOURCE EXCERPT</p><blockquote>“{selected.exactQuote}”</blockquote></section>
+        <p className="citation-text"><strong>Citation</strong> {citation}</p>
+        <div className="detail-actions"><a href={selected.canonicalUrl} target="_blank" rel="noreferrer">Open public record <span aria-hidden="true">↗</span></a><button type="button" onClick={() => { setCopyError(false); if (!navigator.clipboard) setCopyError(true); else navigator.clipboard.writeText(citation ?? "").catch(() => setCopyError(true)); }}>Copy citation</button></div>
+        {copyError && <p className="copy-error" role="status">Couldn’t copy citation. Select the citation text instead.</p>}
+      </article>}
+    </section>
+  </main>;
 }
