@@ -86,6 +86,95 @@ h2 { margin: 8px 0 0; font-size: 20px; }
   gap: 32px;
 }
 
+.chat-grid {
+  display: grid;
+  grid-template-columns: minmax(480px, 1.45fr) minmax(310px, .75fr);
+  align-items: start;
+  gap: 32px;
+}
+
+.chat-thread {
+  overflow: hidden;
+  border: 1px solid #dde0d7;
+  border-radius: 10px;
+  background: #fbfbf8;
+}
+
+.suggestion-list {
+  display: grid;
+  gap: 8px;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e1e4dc;
+}
+
+.suggestion-list .eyebrow { margin-bottom: 2px; }
+
+.suggestion-list button {
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid #cbd4c5;
+  border-radius: 6px;
+  background: #f5f5f0;
+  color: #33483d;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.suggestion-list button:disabled,
+.chat-composer button:disabled { cursor: wait; opacity: .6; }
+
+.turn-list { display: grid; gap: 16px; padding: 24px; }
+.empty-chat { margin: 0; color: #526058; line-height: 1.5; }
+
+.chat-turn { display: grid; gap: 10px; padding: 16px; border-radius: 8px; background: #f5f5f0; }
+.chat-question { margin: 0; color: #526058; font-size: 14px; line-height: 1.45; }
+.answer-status { margin: 0; color: #405144; font: 600 12px "DM Mono", monospace; letter-spacing: .04em; text-transform: uppercase; }
+.answer-direct,
+.answer-bullet { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: #17211e; font: 16px/1.5 Georgia, serif; }
+.answer-bullet > [aria-hidden] { color: #667f20; }
+
+.citation-chip {
+  min-height: 44px;
+  padding: 7px 9px;
+  border: 1px solid #aebda3;
+  border-radius: 999px;
+  background: #fbfbf8;
+  color: #33483d;
+  font: 600 12px/1.2 "DM Sans", Arial, sans-serif;
+  text-align: left;
+}
+
+.answer-boundary,
+.provider-failure,
+.insufficient-copy,
+.refusal-actions p,
+.find-more-copy { margin: 0; font-size: 14px; line-height: 1.5; }
+.answer-boundary { color: #526058; }
+.chat-refusal { border-left: 3px solid #b77c23; }
+.provider-failure { color: #8b2f26; font-weight: 600; }
+.insufficient-copy { color: #33483d; font-weight: 600; }
+
+.refusal-actions { display: grid; gap: 8px; padding: 0 24px 20px; }
+.refusal-actions > p:first-child { color: #526058; }
+.refusal-actions button {
+  justify-self: start;
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid #bfc9bd;
+  border-radius: 6px;
+  background: transparent;
+  color: #33483d;
+  font-size: 14px;
+  font-weight: 600;
+}
+.find-more-copy { padding: 10px; border-left: 2px solid #b77c23; background: #fff7e8; color: #5b4b2b; }
+
+.chat-composer { display: grid; grid-template-columns: 1fr auto; gap: 8px; padding: 20px 24px 24px; border-top: 1px solid #e1e4dc; }
+.chat-composer label { grid-column: 1 / -1; color: #33483d; font-size: 14px; font-weight: 600; }
+.chat-composer textarea { min-height: 44px; resize: vertical; padding: 10px 12px; border: 1px solid #bfc9bd; border-radius: 6px; background: #fff; color: #17211e; font: 16px/1.4 "DM Sans", Arial, sans-serif; }
+.chat-composer button { min-width: 70px; min-height: 44px; align-self: end; padding: 10px 14px; border: 0; border-radius: 6px; background: #667f20; color: #fff; font-weight: 700; }
+
 .record-list,
 .detail-panel {
   border: 1px solid #dde0d7;
@@ -223,6 +312,8 @@ h2 { margin: 8px 0 0; font-size: 20px; }
 @media (hover: hover) {
   .bottom-nav button:hover { background: #f2f5e9; }
   .detail-actions button:hover { background: #f2f5e9; }
+  .suggestion-list button:hover, .citation-chip:hover, .refusal-actions button:hover { background: #f2f5e9; }
+  .chat-composer button:hover:not(:disabled) { background: #526b19; }
 }
 
 .future-message {
@@ -246,15 +337,19 @@ h2 { margin: 8px 0 0; font-size: 20px; }
 @media (max-width: 1060px) {
   .recent-shell { padding: 32px 32px 128px; }
   .evidence-grid { grid-template-columns: 1fr; }
+  .chat-grid { grid-template-columns: 1fr; }
   .detail-panel { position: static; }
 }
 
 @media (max-width: 720px) {
   .recent-shell { padding: 24px 16px 120px; }
   .record-row, .panel-heading, .detail-panel { padding-right: 16px; padding-left: 16px; }
+  .suggestion-list, .turn-list, .refusal-actions, .chat-composer { padding-right: 16px; padding-left: 16px; }
   .detail-actions, .detail-meta { grid-template-columns: 1fr; }
   .bottom-nav button { min-height: 52px; }
   .future-message { right: 16px; left: 16px; bottom: 64px; }
+  .chat-composer { grid-template-columns: 1fr; }
+  .chat-composer button { width: 100%; }
 }
 
 @media (max-width: 420px) {
