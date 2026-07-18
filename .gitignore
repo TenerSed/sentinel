@@ -7,3 +7,7 @@ vite.config.d.ts
 .env
 .env.*
 !.env.example
+data/imports.db
+data/imports.db-*
+data/imports.db-wal
+data/imports.db-shm
