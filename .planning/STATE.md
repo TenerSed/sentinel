@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: Phase 1 — Evidence Foundation
 status: planning
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-07-18T08:05:37.484Z"
+stopped_at: Phase 2 plan approved and committed
+last_updated: "2026-07-18T08:14:06.575Z"
 progress:
   total_phases: 2
   completed_phases: 1
-  total_plans: 3
+  total_plans: 6
   completed_plans: 3
 ---
 
@@ -53,6 +53,6 @@ Plan Phase 1: establish the offline SQLite evidence contract and deterministic s
 
 ## Session
 
-**Last session:** 2026-07-18T08:05:37.476Z
-**Stopped at:** Phase 2 UI-SPEC approved
-**Resume file:** .planning/phases/02-source-coverage-and-recent/02-UI-SPEC.md
+**Last session:** 2026-07-18T08:14:06.567Z
+**Stopped at:** Phase 2 plan approved and committed
+**Resume file:** .planning/phases/02-source-coverage-and-recent/02-03-PLAN.md
