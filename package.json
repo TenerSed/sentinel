@@ -10,12 +10,14 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "4.3.4",
-    "vite": "5.4.19",
-    "typescript": "5.7.3",
+    "better-sqlite3": "^12.11.1",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "typescript": "5.7.3",
+    "vite": "5.4.19"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "22.15.3",
     "@types/react": "18.3.20",
     "@types/react-dom": "18.3.6"
