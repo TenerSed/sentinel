@@ -45,6 +45,10 @@ function assertSeedMatchesDatabase(database, fixture) {
     if (!actual || actual.id !== expected.id || actual.locationId !== expected.locationId || actual.locationLabel !== expected.locationLabel || actual.updateType !== expected.updateType || actual.sourceKind !== expected.sourceKind || actual.publisher !== expected.publisher || actual.sourceTitle !== expected.sourceTitle || actual.title !== expected.title || actual.publishedAt !== expected.publishedAt || actual.canonicalUrl !== expected.canonicalUrl || actual.exactQuote !== expected.exactQuote || actual.evidenceKind !== expected.evidenceKind) {
       throw new Error(`generated demo seed record ${expected.id} disagrees with SQLite`);
     }
+    const fixtureRecord = fixture.records.find((record) => record.id === actual.id);
+    if (!fixtureRecord || JSON.stringify(actual.topics) !== JSON.stringify(fixtureRecord.topics) || JSON.stringify(actual.embedding) !== JSON.stringify(fixtureRecord.embedding)) {
+      throw new Error(`generated demo seed record ${actual.id} disagrees with curated fixture metadata`);
+    }
     validateEvidence({ quote: actual.exactQuote, canonicalUrl: actual.canonicalUrl, pageNumber: actual.locator?.pageNumber, startSeconds: actual.locator?.startSeconds, endSeconds: actual.locator?.endSeconds });
     if (!["legislation", "office_holder", "policy"].includes(actual.updateType)) throw new Error(`${actual.id}: generated seed has invalid update type`);
     if (!["civic_update", "recent_public_position"].includes(actual.evidenceKind)) throw new Error(`${actual.id}: generated seed has invalid evidence kind`);

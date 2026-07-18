@@ -31,6 +31,30 @@ export type EvidenceRecord = {
   canonicalUrl: string;
   exactQuote: string;
   locator: EvidenceLocator;
+  topics: string[];
+  embedding: number[];
+};
+
+export type CuratedSignal =
+  | { kind: "chat"; topics: string[]; at: string }
+  | { kind: "citation" | "recent"; recordId: string; at: string };
+
+export type CuratedState = {
+  version: 1;
+  signals: CuratedSignal[];
+  topics: string[];
+};
+
+export type CuratedReason = {
+  topic?: string;
+  action?: "recent Chat question" | "copied citation" | "opened update";
+  recency: "newest available" | "recent public update" | "earlier public update";
+};
+
+export type RankedCuratedRecord = {
+  record: EvidenceRecord;
+  reason: CuratedReason;
+  starter: boolean;
 };
 
 export type DemoSeed = {

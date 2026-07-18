@@ -108,6 +108,7 @@ export function validateFixture(fixture = loadFixture()) {
   if (coveragePairs.size !== 5) throw new Error("fixture coverage must not broaden direct selections");
   const ids = new Set();
   const sourceKinds = new Set();
+  let embeddingDimension;
   let hasPage = false;
   let hasTimestamp = false;
   for (const record of fixture.records) {
@@ -123,6 +124,14 @@ export function validateFixture(fixture = loadFixture()) {
     if (typeof record.title !== "string" || typeof record.sourceTitle !== "string" || !record.title || !record.sourceTitle) throw new Error(`${record.id}: titles are required`);
     assertTimestamp(record.publishedAt, `${record.id}: publishedAt`);
     assertTimestamp(record.retrievedAt, `${record.id}: retrievedAt`);
+    if (!Array.isArray(record.topics) || !record.topics.length || record.topics.length > 8 || !record.topics.every((topic) => typeof topic === "string" && /^[a-z][a-z0-9-]{0,39}$/.test(topic)) || new Set(record.topics).size !== record.topics.length) {
+      throw new Error(`${record.id}: topics must be non-empty, normalized civic IDs`);
+    }
+    if (!Array.isArray(record.embedding) || !record.embedding.length || !record.embedding.every(Number.isFinite)) throw new Error(`${record.id}: embedding must contain finite values`);
+    if (embeddingDimension === undefined) embeddingDimension = record.embedding.length;
+    if (record.embedding.length !== embeddingDimension) throw new Error(`${record.id}: embedding dimension must match every record`);
+    const norm = Math.hypot(...record.embedding);
+    if (!Number.isFinite(norm) || norm === 0 || Math.abs(norm - 1) > 0.000001) throw new Error(`${record.id}: embedding must be L2-normalized`);
     if (typeof record.contentHash !== "string" || !/^sha256:[a-f0-9]{64}$/.test(record.contentHash)) throw new Error(`${record.id}: contentHash must be SHA-256`);
     if (record.originalUrl !== record.canonicalUrl) throw new Error(`${record.id}: original and canonical URL must match this hand-verified fixture`);
     validateEvidence({ quote: record.quote, canonicalUrl: record.canonicalUrl, pageNumber: record.locator?.pageNumber, startSeconds: record.locator?.startSeconds, endSeconds: record.locator?.endSeconds });
@@ -180,9 +189,14 @@ function writeDemoSeed(databaseFile, fixture) {
     for (const record of projectEvidenceForLocation(database, location.id)) byId.set(record.id, record);
   }
   database.close();
+  const metadataById = new Map(fixture.records.map(({ id, topics, embedding }) => [id, { topics, embedding }]));
   const records = [...byId.values()]
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt) || a.id.localeCompare(b.id))
-    .map(({ pageNumber, startSeconds, endSeconds, ...record }) => record);
+    .map(({ pageNumber, startSeconds, endSeconds, ...record }) => {
+      const metadata = metadataById.get(record.id);
+      if (!metadata) throw new Error(`${record.id}: missing curated metadata`);
+      return { ...record, topics: metadata.topics, embedding: metadata.embedding };
+    });
   const seed = { version: 1, locations: fixture.locations, coverage: fixture.coverage, records };
   const output = `import type { DemoSeed } from "./types";\n\nexport const demoSeed: DemoSeed = ${JSON.stringify(seed, null, 2)};\n`;
   fs.writeFileSync(path.join(root, "src/demo-seed.ts"), output);

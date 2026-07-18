@@ -31,73 +31,73 @@
       "id": "indy-prop-26-030", "sourceId": "indy-council", "sourceKind": "government_record", "locationId": "indy", "updateType": "policy",
       "title": "Council proposal urges transparent data-center engagement", "sourceTitle": "City-County Council Proposal No. 30, 2026", "publishedAt": "2026-01-05T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=19373&name=PROP26-030&type=1", "originalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=19373&name=PROP26-030&type=1", "contentHash": "sha256:514b3cc66b729e0861ac11e1034671ea7f4def52ec51612cdc2be8738f69c817", "rawPath": "data/raw/indy-prop26-030.pdf", "evidenceRawPath": "data/raw/indy-prop26-030-page-1-evidence.txt", "evidenceContentHash": "sha256:b08b3701d441f5504ef15b34ba691da244c18bc1530a7702c41710b336e3edb4",
-      "quote": "Developers are discouraged from pursuing local tax abatements for their projects.", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "Developers are discouraged from pursuing local tax abatements for their projects.", "topics": ["technology", "government-operations"], "embedding": [0, 0, 0, 0, 0.70710678, 0.70710678, 0, 0], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "indy-prop-25-050", "sourceId": "indy-council", "sourceKind": "government_record", "locationId": "indy", "updateType": "policy",
       "title": "City-County Fiscal Ordinance No. 1, 2025", "sourceTitle": "City-County Fiscal Ordinance No. 1, 2025", "publishedAt": "2025-01-01T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=18995&name=PROP25-050&type=1", "originalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=18995&name=PROP25-050&type=1", "contentHash": "sha256:b3ba230269eb0656646f68511a39d19dcc03ad901c0a09a30f9ba89e3a2c57aa", "rawPath": "data/raw/indy-prop25-050.pdf", "evidenceRawPath": "data/raw/indy-prop25-050-page-1-evidence.txt", "evidenceContentHash": "sha256:88a12b99817cbd2a873142a9a835917e130a6deffbec849a5c59c742f56165e4",
-      "quote": "CITY-COUNTY FISCAL ORDINANCE NO. 1, 2025", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "CITY-COUNTY FISCAL ORDINANCE NO. 1, 2025", "topics": ["budget", "government-operations"], "embedding": [0, 0.70710678, 0, 0, 0, 0.70710678, 0, 0], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "indy-prop-24-205", "sourceId": "indy-council", "sourceKind": "government_record", "locationId": "indy", "updateType": "policy",
       "title": "City-County General Ordinance No. 25, 2024", "sourceTitle": "City-County General Ordinance No. 25, 2024", "publishedAt": "2025-01-01T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=18732&name=PROP24-205&type=1", "originalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=18732&name=PROP24-205&type=1", "contentHash": "sha256:839391a0c7a4ecd1b5d385e00f98808cd98fb435db517079cf0cba49efb2c6c6", "rawPath": "data/raw/indy-prop24-205.pdf", "evidenceRawPath": "data/raw/indy-prop24-205-page-1-evidence.txt", "evidenceContentHash": "sha256:cae901eec8042551714a30c034687e71578de56024d2231c15c97dea51f99995",
-      "quote": "The Indianapolis Short-Term Rental Permitting is hereby established.", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "The Indianapolis Short-Term Rental Permitting is hereby established.", "topics": ["housing", "government-operations"], "embedding": [0.70710678, 0, 0, 0, 0, 0.70710678, 0, 0], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "indy-video-2026-06-01", "sourceId": "indy-video", "sourceKind": "video_transcript", "locationId": "indy", "updateType": "office_holder",
       "title": "City-County Council meeting opened", "sourceTitle": "Indianapolis City-County Council Meeting — June 1, 2026", "publishedAt": "2026-06-01T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.openpublica.com/meetings/indianapolis-indiana-city-county-council-2026-06-01-6a46ab01b8ebd3518b4bfaf6", "originalUrl": "https://www.openpublica.com/meetings/indianapolis-indiana-city-county-council-2026-06-01-6a46ab01b8ebd3518b4bfaf6", "contentHash": "sha256:20413a18b2aea86e024437d93417032b679ec40206bbb64e5bc7248c76bc68c8", "rawPath": "data/raw/indy-council-2026-06-01-transcript.txt",
-      "quote": "I will now call to order the Indianapolis City County Council to order", "evidenceKind": "civic_update", "locator": { "startSeconds": 14, "endSeconds": 20 }
+      "quote": "I will now call to order the Indianapolis City County Council to order", "topics": ["government-operations"], "embedding": [0, 0, 0, 0, 0, 1, 0, 0], "evidenceKind": "civic_update", "locator": { "startSeconds": 14, "endSeconds": 20 }
     },
     {
       "id": "in-eo-25-10", "sourceId": "in-governor", "sourceKind": "government_record", "locationId": "indiana", "updateType": "policy",
       "title": "Indiana continues the Executive Council on Cybersecurity", "sourceTitle": "Executive Order 25-10", "publishedAt": "2025-01-13T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.in.gov/gov/files/EO-25-10.pdf", "originalUrl": "https://www.in.gov/gov/files/EO-25-10.pdf", "contentHash": "sha256:f847f6186fc58fdb10af48aab8b926f8ce2f8facfbc42347b67d1a8980b0c62a", "rawPath": "data/raw/in-eo-25-10.pdf", "evidenceRawPath": "data/raw/in-eo-25-10-page-1-evidence.txt", "evidenceContentHash": "sha256:a964cb0bf73f3c5a17c289fb1ef292f1643aba022bd9d661f0aaa56c71049aa3",
-      "quote": "shall continue until July 1, 2026.", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "shall continue until July 1, 2026.", "topics": ["technology", "government-operations"], "embedding": [0, 0, 0, 0, 0.70710678, 0.70710678, 0, 0], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "in-eo-25-11", "sourceId": "in-governor", "sourceKind": "government_record", "locationId": "indiana", "updateType": "office_holder",
       "title": "Indiana orders review of prior executive orders", "sourceTitle": "Executive Order 25-11", "publishedAt": "2025-02-01T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.in.gov/gov/files/EO-25-11.pdf", "originalUrl": "https://www.in.gov/gov/files/EO-25-11.pdf", "contentHash": "sha256:c4290a9da72679eeb36c777745a22997a726213ab2d6fc1c4d197e9be92f9588", "rawPath": "data/raw/in-eo-25-11.pdf", "evidenceRawPath": "data/raw/in-eo-25-11-page-1-evidence.txt", "evidenceContentHash": "sha256:743546b6648c3f2fc2959945a86992b5e6357b29af1fba1367943ab497800fc5",
-      "quote": "The Governor’s General Counsel is directed to conduct a review of the previously issued Executive Orders.", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "The Governor’s General Counsel is directed to conduct a review of the previously issued Executive Orders.", "topics": ["government-operations"], "embedding": [0, 0, 0, 0, 0, 1, 0, 0], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "in-eo-25-20", "sourceId": "in-governor", "sourceKind": "government_record", "locationId": "indiana", "updateType": "policy",
       "title": "Indiana executive order addresses abortion-law execution", "sourceTitle": "Executive Order 25-20", "publishedAt": "2025-03-01T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.in.gov/gov/files/EO-25-20.pdf", "originalUrl": "https://www.in.gov/gov/files/EO-25-20.pdf", "contentHash": "sha256:08ed767ebbe8b16f543b5d10850d85dd49f9c5390952f5a01fa91575f9cbfecd", "rawPath": "data/raw/in-eo-25-20.pdf", "evidenceRawPath": "data/raw/in-eo-25-20-page-1-evidence.txt", "evidenceContentHash": "sha256:8d902645bbf8fe01bc96e4d176a73f456377f4ce4e035b00355c9b35697a7e6e",
-      "quote": "All state agencies are directed to ensure that the State of Indiana’s abortion laws are fully and faithfully executed,", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "All state agencies are directed to ensure that the State of Indiana’s abortion laws are fully and faithfully executed,", "topics": ["health", "government-operations"], "embedding": [0, 0, 0, 0, 0, 0.70710678, 0.70710678, 0], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "federal-plaw-119-28", "sourceId": "gpo-public-laws", "sourceKind": "government_record", "locationId": "federal", "updateType": "legislation",
       "title": "Rescissions Act of 2025 approved", "sourceTitle": "Public Law 119-28 — Rescissions Act of 2025", "publishedAt": "2025-07-24T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ28/pdf/PLAW-119publ28.pdf", "originalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ28/pdf/PLAW-119publ28.pdf", "contentHash": "sha256:7a0c8b047213e437a04cb653519f47da90084f91d98de1146c15c2c6ef04e978", "rawPath": "data/raw/plaw-119-28.pdf", "evidenceRawPath": "data/raw/plaw-119-28-page-1-evidence.txt", "evidenceContentHash": "sha256:f1a838ac8c64d7c7b5e78fd7099fd3330086c8e844563d184f46c924a2f3c23e",
-      "quote": "Rescissions Act of 2025", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "Rescissions Act of 2025", "topics": ["budget", "legislation"], "embedding": [0, 0.70710678, 0, 0, 0, 0, 0, 0.70710678], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "federal-plaw-119-36", "sourceId": "gpo-public-laws", "sourceKind": "government_record", "locationId": "federal", "updateType": "legislation",
       "title": "Homebuyers Privacy Protection Act approved", "sourceTitle": "Public Law 119-36 — Homebuyers Privacy Protection Act", "publishedAt": "2025-09-05T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ36/pdf/PLAW-119publ36.pdf", "originalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ36/pdf/PLAW-119publ36.pdf", "contentHash": "sha256:102f3f4be1aa1acd6a115f4e377aef7ead2fb5e012e29ef3ac40f9630ad79a7f", "rawPath": "data/raw/plaw-119-36.pdf", "evidenceRawPath": "data/raw/plaw-119-36-page-1-evidence.txt", "evidenceContentHash": "sha256:efe378750a731fea7598f657ac49275874aaa4dfba26ee90af0331b9a67aa5f3",
-      "quote": "Homebuyers Privacy Protection Act", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "Homebuyers Privacy Protection Act", "topics": ["housing", "legislation"], "embedding": [0.70710678, 0, 0, 0, 0, 0, 0, 0.70710678], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "federal-plaw-119-40", "sourceId": "gpo-public-laws", "sourceKind": "government_record", "locationId": "federal", "updateType": "legislation",
       "title": "Wetlands Conservation and Access Improvement Act approved", "sourceTitle": "Public Law 119-40 — Wetlands Conservation and Access Improvement Act of 2025", "publishedAt": "2025-11-25T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ40/pdf/PLAW-119publ40.pdf", "originalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ40/pdf/PLAW-119publ40.pdf", "contentHash": "sha256:a469d18fcda4be6695607e484d320e619eecd1ef3ed0e590a9f96dcf2fda5a15", "rawPath": "data/raw/plaw-119-40.pdf", "evidenceRawPath": "data/raw/plaw-119-40-page-1-evidence.txt", "evidenceContentHash": "sha256:ff8a5d98642642ef47c40a10485e712f3e75ab3d95292c26a8a80723915f1079",
-      "quote": "Wetlands Conservation and Access Improvement Act of 2025", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "Wetlands Conservation and Access Improvement Act of 2025", "topics": ["environment", "legislation"], "embedding": [0, 0, 0.70710678, 0, 0, 0, 0, 0.70710678], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "federal-plaw-119-65", "sourceId": "gpo-public-laws", "sourceKind": "government_record", "locationId": "federal", "updateType": "legislation",
       "title": "Save Our Seas 2.0 Amendments Act approved", "sourceTitle": "Public Law 119-65 — Save Our Seas 2.0 Amendments Act", "publishedAt": "2025-12-26T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ65/pdf/PLAW-119publ65.pdf", "originalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ65/pdf/PLAW-119publ65.pdf", "contentHash": "sha256:a2795296f9001c76e28f3034980cf9c5d4a2e8d19e92102f81dbb641dd5d9f4d", "rawPath": "data/raw/plaw-119-65.pdf", "evidenceRawPath": "data/raw/plaw-119-65-page-1-evidence.txt", "evidenceContentHash": "sha256:c1054ab2c67f451d7295b4ea2ba00459a4fd6824918e57446bb037de0fc2bb9e",
-      "quote": "SAVE OUR SEAS 2.0 AMENDMENTS ACT", "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
+      "quote": "SAVE OUR SEAS 2.0 AMENDMENTS ACT", "topics": ["environment", "legislation"], "embedding": [0, 0, 0.70710678, 0, 0, 0, 0, 0.70710678], "evidenceKind": "civic_update", "locator": { "pageNumber": 1 }
     },
     {
       "id": "in-report-2026-03-06", "sourceId": "indiana-newsdesk", "sourceKind": "reporting", "locationId": "indiana", "updateType": "legislation",
       "title": "Reporting: Indiana Newsdesk describes Senate Bill 199 review requirement", "sourceTitle": "Indiana Newsdesk, Episode 1334, 03/06/2026", "publishedAt": "2026-03-06T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.pbs.org/video/indiana-newsdesk-episode-1334-03062026-2h6adw/", "originalUrl": "https://www.pbs.org/video/indiana-newsdesk-episode-1334-03062026-2h6adw/", "contentHash": "sha256:a1297839eae9978f4caa28df5c87ac7e6fd6e7fba299c73aee5b5ddc11b8ce84", "rawPath": "data/raw/indiana-newsdesk-2026-03-06.vtt",
-      "quote": "SENATE BILL 199 DIRECTS THE INDIANA COMMISSION FOR HIGHER EDUCATION TO REVIEW DEGREE PROGRAMS AT STATE COLLEGES", "evidenceKind": "civic_update", "locator": { "startSeconds": 404, "endSeconds": 411 }
+      "quote": "SENATE BILL 199 DIRECTS THE INDIANA COMMISSION FOR HIGHER EDUCATION TO REVIEW DEGREE PROGRAMS AT STATE COLLEGES", "topics": ["education", "legislation"], "embedding": [0, 0, 0, 0.70710678, 0, 0, 0, 0.70710678], "evidenceKind": "civic_update", "locator": { "startSeconds": 404, "endSeconds": 411 }
     }
   ]
 }

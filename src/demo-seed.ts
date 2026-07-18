@@ -56,7 +56,20 @@ export const demoSeed: DemoSeed = {
         "kind": "timestamp",
         "startSeconds": 14,
         "endSeconds": 20
-      }
+      },
+      "topics": [
+        "government-operations"
+      ],
+      "embedding": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
     },
     {
       "id": "in-report-2026-03-06",
@@ -75,7 +88,21 @@ export const demoSeed: DemoSeed = {
         "kind": "timestamp",
         "startSeconds": 404,
         "endSeconds": 411
-      }
+      },
+      "topics": [
+        "education",
+        "legislation"
+      ],
+      "embedding": [
+        0,
+        0,
+        0,
+        0.70710678,
+        0,
+        0,
+        0,
+        0.70710678
+      ]
     },
     {
       "id": "indy-prop-26-030",
@@ -93,7 +120,21 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "technology",
+        "government-operations"
+      ],
+      "embedding": [
+        0,
+        0,
+        0,
+        0,
+        0.70710678,
+        0.70710678,
+        0,
+        0
+      ]
     },
     {
       "id": "federal-plaw-119-65",
@@ -111,7 +152,21 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "environment",
+        "legislation"
+      ],
+      "embedding": [
+        0,
+        0,
+        0.70710678,
+        0,
+        0,
+        0,
+        0,
+        0.70710678
+      ]
     },
     {
       "id": "federal-plaw-119-40",
@@ -129,7 +184,21 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "environment",
+        "legislation"
+      ],
+      "embedding": [
+        0,
+        0,
+        0.70710678,
+        0,
+        0,
+        0,
+        0,
+        0.70710678
+      ]
     },
     {
       "id": "federal-plaw-119-36",
@@ -147,7 +216,21 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "housing",
+        "legislation"
+      ],
+      "embedding": [
+        0.70710678,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.70710678
+      ]
     },
     {
       "id": "federal-plaw-119-28",
@@ -165,7 +248,21 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "budget",
+        "legislation"
+      ],
+      "embedding": [
+        0,
+        0.70710678,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.70710678
+      ]
     },
     {
       "id": "in-eo-25-20",
@@ -183,7 +280,21 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "health",
+        "government-operations"
+      ],
+      "embedding": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.70710678,
+        0.70710678,
+        0
+      ]
     },
     {
       "id": "in-eo-25-11",
@@ -201,7 +312,20 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "government-operations"
+      ],
+      "embedding": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ]
     },
     {
       "id": "in-eo-25-10",
@@ -219,7 +343,21 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "technology",
+        "government-operations"
+      ],
+      "embedding": [
+        0,
+        0,
+        0,
+        0,
+        0.70710678,
+        0.70710678,
+        0,
+        0
+      ]
     },
     {
       "id": "indy-prop-24-205",
@@ -237,7 +375,21 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "housing",
+        "government-operations"
+      ],
+      "embedding": [
+        0.70710678,
+        0,
+        0,
+        0,
+        0,
+        0.70710678,
+        0,
+        0
+      ]
     },
     {
       "id": "indy-prop-25-050",
@@ -255,7 +407,21 @@ export const demoSeed: DemoSeed = {
       "locator": {
         "kind": "page",
         "pageNumber": 1
-      }
+      },
+      "topics": [
+        "budget",
+        "government-operations"
+      ],
+      "embedding": [
+        0,
+        0.70710678,
+        0,
+        0,
+        0,
+        0.70710678,
+        0,
+        0
+      ]
     }
   ]
 };
