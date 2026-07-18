@@ -14,6 +14,7 @@
     "validate:recent": "node scripts/recent-scope-check.mjs",
     "validate:import": "node scripts/import-check.mjs",
     "validate:chat": "node scripts/chat-contract-check.mjs",
+    "validate:curated": "node scripts/curated-check.mjs",
     "import": "node scripts/import.mjs"
   },
   "dependencies": {
