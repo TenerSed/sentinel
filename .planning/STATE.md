@@ -4,10 +4,10 @@ milestone: v1.0
 milestone_name: milestone
 current_phase: 03
 status: completed
-stopped_at: Phase 3 verified complete; ready to discuss Phase 4 Curated
-last_updated: "2026-07-18T16:46:36.571Z"
+stopped_at: Phase 4 context gathered
+last_updated: "2026-07-18T17:21:28.993Z"
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
   total_plans: 9
   completed_plans: 9
@@ -53,6 +53,6 @@ Plan Phase 1: establish the offline SQLite evidence contract and deterministic s
 
 ## Session
 
-**Last session:** 2026-07-18T16:46:36.564Z
-**Stopped at:** Phase 3 verified complete; ready to discuss Phase 4 Curated
-**Resume file:** .planning/ROADMAP.md
+**Last session:** 2026-07-18T17:21:28.983Z
+**Stopped at:** Phase 4 context gathered
+**Resume file:** .planning/phases/04-curated/04-CONTEXT.md
