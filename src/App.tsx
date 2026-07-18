@@ -1,12 +1,12 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import { CURATED_STORAGE_KEY, emptyCuratedState, parseCuratedState, recordSignal, topicsFromQuestion } from "./curated";
+import { CURATED_STORAGE_KEY, emptyCuratedState, normalizeTopic, parseCuratedState, rankCuratedRecords, recordSignal, resetCuratedState, topicsFromQuestion } from "./curated";
 import { demoChatPresets, findBundledAnswer } from "./demo-chat";
 import { demoSeed } from "./demo-seed";
 import type { AnswerBlock, ChatProviderStatus, ChatThreads, ChatTurn, CuratedSignal, CuratedState, DemoSeed, EvidenceLocator, EvidenceRecord, GroundedAnswer, SourceKind, UpdateType } from "./types";
 
 type SeedState = { status: "loading" } | { status: "error"; diagnostic: string } | { status: "ready"; seed: DemoSeed };
 type LiveStatus = { available: boolean };
-type ActiveTab = "recent" | "chat";
+type ActiveTab = "recent" | "curated" | "chat";
 
 const storageKey = "lamplighter-chat-v1";
 const insufficient: GroundedAnswer = { status: "insufficient", blocks: [] };
@@ -135,6 +135,8 @@ export default function App() {
   const [storageReady, setStorageReady] = useState(false);
   const [curated, setCurated] = useState<CuratedState>(emptyCuratedState);
   const [curatedStorageReady, setCuratedStorageReady] = useState(false);
+  const [topicInput, setTopicInput] = useState("");
+  const [curatedStatus, setCuratedStatus] = useState("");
   const [recentOpenId, setRecentOpenId] = useState<string>();
   const [question, setQuestion] = useState("");
   const [asking, setAsking] = useState(false);
@@ -177,6 +179,7 @@ export default function App() {
   }, [curated, curatedStorageReady]);
 
   const records = useMemo(() => state.status === "ready" ? coverageRecords(state.seed, coverageId) : [], [state, coverageId]);
+  const rankedRecords = useMemo(() => rankCuratedRecords(records, curated), [curated, records]);
   const packet = useMemo(() => records.slice(0, 6), [records]);
   const selected = records.find((record) => record.id === selectedId) ?? records[0];
   const location = state.status === "ready" ? state.seed.locations.find((item) => item.id === coverageId) : undefined;
@@ -184,12 +187,40 @@ export default function App() {
   const presets = demoChatPresets.filter((preset) => preset.coverageId === coverageId);
   const suggestionQuestions = [...presets.map(({ question: prompt }) => prompt), ...records.slice(0, 5).map((record) => `What does the public record say about ${record.title}?`)].filter((prompt, index, list) => list.indexOf(prompt) === index).slice(0, 5);
   const knownTopics = state.status === "ready" ? state.seed.records.flatMap((record) => record.topics) : [];
+  const topicOptions = [...new Set(knownTopics)].sort();
 
   const appendCuratedSignal = useCallback((signal: CuratedSignal) => {
     if (state.status !== "ready") return;
     const knownRecordIds = new Set(state.seed.records.map(({ id }) => id));
-    setCurated((current) => recordSignal(current, signal, knownRecordIds));
+    const activityTopics = signal.kind === "chat" ? signal.topics : state.seed.records.find((record) => record.id === signal.recordId)?.topics ?? [];
+    setCurated((current) => {
+      const next = recordSignal(current, signal, knownRecordIds);
+      return { ...next, topics: [...new Set([...next.topics, ...activityTopics])].slice(0, 12) };
+    });
   }, [state]);
+
+  const toggleTopic = (topic: string) => {
+    setCurated((current) => current.topics.includes(topic)
+      ? { ...current, topics: current.topics.filter((item) => item !== topic) }
+      : current.topics.length < 12 ? { ...current, topics: [...current.topics, topic] } : current);
+    setCuratedStatus("");
+  };
+
+  const addTopic = (event: FormEvent) => {
+    event.preventDefault();
+    const topic = normalizeTopic(topicInput);
+    if (!topic || curated.topics.includes(topic) || curated.topics.length >= 12) return;
+    setCurated((current) => current.topics.includes(topic) || current.topics.length >= 12 ? current : { ...current, topics: [...current.topics, topic] });
+    setTopicInput("");
+    setCuratedStatus("Topic added to this browser’s Curated view.");
+  };
+
+  const resetCurated = () => {
+    if (!window.confirm("Reset Curated topics and local ranking signals? Your Chat history will stay in this browser.")) return;
+    setCurated(resetCuratedState());
+    setTopicInput("");
+    setCuratedStatus("Curated personalization was reset. This is now the starter view.");
+  };
 
   useEffect(() => {
     if (!recentOpenId || activeTab !== "recent" || selectedId !== recentOpenId) return;
@@ -242,7 +273,7 @@ export default function App() {
 
   const citation = selected && `${selected.sourceTitle} · ${locatorText(selected.locator)}`;
   const label = location?.label ?? "configured coverage";
-  const selectCoverage = (value: string) => { setCoverageId(value); setSelectedId(undefined); setRecentOpenId(undefined); setCopyError(false); setFutureMessage(""); setShowFindMore(false); };
+  const selectCoverage = (value: string) => { setCoverageId(value); setSelectedId(undefined); setRecentOpenId(undefined); setCopyError(false); setFutureMessage(""); setCuratedStatus(""); setShowFindMore(false); };
   const copyCitation = () => {
     setCopyError(false);
     if (!navigator.clipboard || !citation || !selected) return setCopyError(true);
@@ -258,16 +289,17 @@ export default function App() {
   </article> : null;
 
   return <main className="recent-shell">
-    <header className="recent-header"><p className="eyebrow">LAMPLIGHTER / OFFLINE DEMO</p><h1>{activeTab === "chat" ? "Ask about public records" : "Recent government updates"}</h1><p>{activeTab === "chat" ? "Answers stay inside the coverage and surfaced records you selected." : "Source-grounded public records for the coverage you selected."}</p>
+    <header className="recent-header"><p className="eyebrow">LAMPLIGHTER / OFFLINE DEMO</p><h1>{activeTab === "chat" ? "Ask about public records" : activeTab === "curated" ? "Curated government updates" : "Recent government updates"}</h1><p>{activeTab === "chat" ? "Answers stay inside the coverage and surfaced records you selected." : activeTab === "curated" ? "Offline, local personalization over source-grounded updates in the coverage you selected." : "Source-grounded public records for the coverage you selected."}</p>
       <label className="coverage-control">Coverage<select value={coverageId} onChange={(event) => selectCoverage(event.target.value)}>{state.seed.locations.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>
-      <div className="seed-status"><span aria-hidden="true" />{activeTab === "chat" ? live.available ? "Live AI available · bundled demos ready" : "Live AI unavailable · bundled demos ready" : "Seed ready · offline · no API key required"}</div>
+      <div className="seed-status"><span aria-hidden="true" />{activeTab === "chat" ? live.available ? "Live AI available · bundled demos ready" : "Live AI unavailable · bundled demos ready" : activeTab === "curated" ? "Local ranking · offline · no API key required" : "Seed ready · offline · no API key required"}</div>
     </header>
     {activeTab === "recent" ? <section className="evidence-grid" aria-label="Recent government updates"><section className="record-list" aria-labelledby="recent-heading"><div className="panel-heading"><p className="eyebrow">VERIFIED UPDATES</p><h2 id="recent-heading">Recent in {label}</h2><p>{records.length} {records.length === 1 ? "update" : "updates"}</p></div>
-      {records.length ? records.map((record) => <button type="button" key={record.id} className={`record-row ${record.id === selected?.id ? "selected" : ""}`} aria-pressed={record.id === selected?.id} onClick={() => { setSelectedId(record.id); setRecentOpenId(record.id); setCopyError(false); setFutureMessage(""); }}><span className="record-meta">{record.locationLabel} · {sourceLabel[record.sourceKind]} · <time dateTime={record.publishedAt}>{dateText(record.publishedAt)}</time></span><span className="record-tags"><span>{updateLabel[record.updateType]}</span><span>{sourceLabel[record.sourceKind]}</span></span><strong>{record.title}</strong><span className="quote-preview">“{record.exactQuote}”</span><span className="record-locator">{locatorText(record.locator)}</span></button>) : <div className="empty-state"><h2>No verified updates for {label}</h2><p>Lamplighter will not broaden coverage or substitute other records. Choose another configured coverage to inspect its bundled public records.</p></div>}</section>{detailPanel}</section> : <section className="chat-grid" aria-label={`Grounded chat for ${label}`}><section className="chat-thread"><div className="panel-heading"><p className="eyebrow">CLOSED EVIDENCE PACKET</p><h2>Ask about {label}</h2><p>{packet.length} surfaced records · citations open the source panel</p></div><section className="suggestion-list" aria-label="Suggested questions"><p className="eyebrow">SUGGESTED QUESTIONS</p>{suggestionQuestions.map((prompt) => <button type="button" key={prompt} onClick={() => void submitQuestion(undefined, prompt)} disabled={asking}>{prompt}</button>)}</section>
+      {records.length ? records.map((record) => <button type="button" key={record.id} className={`record-row ${record.id === selected?.id ? "selected" : ""}`} aria-pressed={record.id === selected?.id} onClick={() => { setSelectedId(record.id); setRecentOpenId(record.id); setCopyError(false); setFutureMessage(""); }}><span className="record-meta">{record.locationLabel} · {sourceLabel[record.sourceKind]} · <time dateTime={record.publishedAt}>{dateText(record.publishedAt)}</time></span><span className="record-tags"><span>{updateLabel[record.updateType]}</span><span>{sourceLabel[record.sourceKind]}</span></span><strong>{record.title}</strong><span className="quote-preview">“{record.exactQuote}”</span><span className="record-locator">{locatorText(record.locator)}</span></button>) : <div className="empty-state"><h2>No verified updates for {label}</h2><p>Lamplighter will not broaden coverage or substitute other records. Choose another configured coverage to inspect its bundled public records.</p></div>}</section>{detailPanel}</section> : activeTab === "curated" ? <section className="evidence-grid" aria-label={`Curated government updates for ${label}`}><section className="record-list" aria-labelledby="curated-heading"><div className="panel-heading curated-heading"><p className="eyebrow">LOCAL CURATION</p><h2 id="curated-heading">Curated in {label}</h2><p>{rankedRecords.length} {rankedRecords.length === 1 ? "update" : "updates"} · {rankedRecords[0]?.starter ? "starter view" : "ranked locally"}</p><div className="curated-controls"><p className="curated-note">Personalization stays in this browser. Reset it anytime.</p><div className="topic-chips" aria-label="Civic topics">{topicOptions.map((topic) => <button type="button" key={topic} className="topic-chip" aria-pressed={curated.topics.includes(topic)} onClick={() => toggleTopic(topic)}>{topic}</button>)}</div><form className="topic-form" onSubmit={addTopic}><label htmlFor="curated-topic">Add topic</label><input id="curated-topic" value={topicInput} onChange={(event) => setTopicInput(event.target.value)} placeholder="e.g. transit" maxLength={40} /><button type="submit">Add</button></form><button type="button" className="reset-curated" onClick={resetCurated}>Reset Curated</button>{curatedStatus && <p className="curated-status" role="status">{curatedStatus}</p>}</div></div>
+      {rankedRecords.length ? rankedRecords.map(({ record, reason, starter }) => <button type="button" key={record.id} className={`record-row ${record.id === selected?.id ? "selected" : ""}`} aria-pressed={record.id === selected?.id} onClick={() => { setSelectedId(record.id); setCopyError(false); setFutureMessage(""); }}><span className="record-meta">{record.locationLabel} · {sourceLabel[record.sourceKind]} · <time dateTime={record.publishedAt}>{dateText(record.publishedAt)}</time></span><span className="record-tags"><span>{updateLabel[record.updateType]}</span><span>{sourceLabel[record.sourceKind]}</span></span><strong>{record.title}</strong><span className="quote-preview">“{record.exactQuote}”</span><span className="curated-why"><strong>Why this</strong> {starter ? `Starter view · ${reason.recency}` : [reason.topic && `topic: ${reason.topic}`, reason.action, reason.recency].filter(Boolean).join(" · ")}</span><span className="record-locator">{locatorText(record.locator)}</span></button>) : <div className="empty-state"><h2>No verified updates for {label}</h2><p>Lamplighter will not broaden coverage or substitute other records. Choose another configured coverage to inspect its bundled public records.</p></div>}</section>{detailPanel}</section> : <section className="chat-grid" aria-label={`Grounded chat for ${label}`}><section className="chat-thread"><div className="panel-heading"><p className="eyebrow">CLOSED EVIDENCE PACKET</p><h2>Ask about {label}</h2><p>{packet.length} surfaced records · citations open the source panel</p></div><section className="suggestion-list" aria-label="Suggested questions"><p className="eyebrow">SUGGESTED QUESTIONS</p>{suggestionQuestions.map((prompt) => <button type="button" key={prompt} onClick={() => void submitQuestion(undefined, prompt)} disabled={asking}>{prompt}</button>)}</section>
       <div className="turn-list" aria-live="polite">{currentTurns.length ? currentTurns.map((turn) => <AnswerView key={`${turn.createdAt}-${turn.question}`} turn={turn} records={packet} onCitation={(id) => { setSelectedId(id); setCopyError(false); }} />) : <p className="empty-chat">Choose a suggested question or ask about these records. Unsupported questions stay unanswered rather than expanding the source set.</p>}</div>
       {currentTurns.some((turn) => turn.answer.status === "insufficient") && <section className="refusal-actions"><p>Try a suggested question grounded in the selected records.</p><button type="button" onClick={() => setShowFindMore((visible) => !visible)} aria-expanded={showFindMore}>Find more sources</button>{showFindMore && <p className="find-more-copy">Evidence expansion is not available in this demo. Lamplighter will not search or substitute reporting while answering.</p>}</section>}
       <form className="chat-composer" onSubmit={(event) => void submitQuestion(event)}><label htmlFor="chat-question">Ask a question about {label}</label><textarea id="chat-question" value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about a cited update…" rows={2} disabled={asking} /><button type="submit" disabled={asking || !question.trim()}>{asking ? "Checking records…" : "Ask"}</button></form></section>{detailPanel}</section>}
     {futureMessage && <p className="future-message" role="status" aria-live="polite">{futureMessage}</p>}
-    <nav className="bottom-nav" aria-label="Lamplighter sections"><button type="button" aria-current={activeTab === "recent" ? "page" : undefined} onClick={() => { setActiveTab("recent"); setRecentOpenId(undefined); setFutureMessage(""); }}>Recent <span>{activeTab === "recent" ? "Active" : "Updates"}</span></button><button type="button" onClick={() => setFutureMessage("Curated is coming in a later phase.")}>Curated <span>Unavailable</span></button><button type="button" aria-current={activeTab === "chat" ? "page" : undefined} onClick={() => { setActiveTab("chat"); setRecentOpenId(undefined); setFutureMessage(""); }}>Chat <span>{activeTab === "chat" ? "Active" : "Grounded"}</span></button></nav>
+    <nav className="bottom-nav" aria-label="Lamplighter sections"><button type="button" aria-current={activeTab === "recent" ? "page" : undefined} onClick={() => { setActiveTab("recent"); setRecentOpenId(undefined); setFutureMessage(""); }}>Recent <span>{activeTab === "recent" ? "Active" : "Updates"}</span></button><button type="button" aria-current={activeTab === "curated" ? "page" : undefined} onClick={() => { setActiveTab("curated"); setRecentOpenId(undefined); setFutureMessage(""); }}>Curated <span>{activeTab === "curated" ? "Active" : "Local"}</span></button><button type="button" aria-current={activeTab === "chat" ? "page" : undefined} onClick={() => { setActiveTab("chat"); setRecentOpenId(undefined); setFutureMessage(""); }}>Chat <span>{activeTab === "chat" ? "Active" : "Grounded"}</span></button></nav>
   </main>;
 }

@@ -186,6 +186,32 @@ h2 { margin: 8px 0 0; font-size: 20px; }
 .panel-heading { padding: 24px; border-bottom: 1px solid #e1e4dc; }
 .panel-heading > p:last-child { margin: 8px 0 0; }
 
+.curated-heading { display: grid; gap: 8px; }
+.curated-controls { display: grid; gap: 12px; margin-top: 8px; }
+.curated-note,
+.curated-status,
+.curated-why { margin: 0; color: #526058; font-size: 14px; line-height: 1.45; }
+.topic-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.topic-chip,
+.reset-curated,
+.topic-form button {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #bfc9bd;
+  border-radius: 6px;
+  background: transparent;
+  color: #33483d;
+  font-size: 14px;
+  font-weight: 600;
+}
+.topic-chip[aria-pressed="true"] { border-color: #667f20; background: #f2f5e9; color: #405144; }
+.topic-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.topic-form label { grid-column: 1 / -1; color: #33483d; font-size: 14px; font-weight: 600; }
+.topic-form input { min-height: 44px; min-width: 0; padding: 8px 12px; border: 1px solid #bfc9bd; border-radius: 6px; background: #fff; color: #17211e; font: 16px/1.4 "DM Sans", Arial, sans-serif; }
+.reset-curated { justify-self: start; border-color: #9b5b50; color: #7a3027; }
+.curated-status { padding-left: 10px; border-left: 2px solid #667f20; color: #405144; }
+.curated-why strong { color: #33483d; }
+
 .record-row {
   display: grid;
   width: 100%;
@@ -313,6 +339,8 @@ h2 { margin: 8px 0 0; font-size: 20px; }
   .bottom-nav button:hover { background: #f2f5e9; }
   .detail-actions button:hover { background: #f2f5e9; }
   .suggestion-list button:hover, .citation-chip:hover, .refusal-actions button:hover { background: #f2f5e9; }
+  .topic-chip:hover, .topic-form button:hover { background: #f2f5e9; }
+  .reset-curated:hover { background: #fff0eb; }
   .chat-composer button:hover:not(:disabled) { background: #526b19; }
 }
 
@@ -350,6 +378,8 @@ h2 { margin: 8px 0 0; font-size: 20px; }
   .future-message { right: 16px; left: 16px; bottom: 64px; }
   .chat-composer { grid-template-columns: 1fr; }
   .chat-composer button { width: 100%; }
+  .topic-form { grid-template-columns: 1fr; }
+  .topic-form button { width: 100%; }
 }
 
 @media (max-width: 420px) {
