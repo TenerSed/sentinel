@@ -28,3 +28,19 @@ export type DemoSeed = {
   locations: DemoLocation[];
   records: EvidenceRecord[];
 };
+
+// Kept until the Phase 1 inspector replaces the merged placeholder shell.
+export type SignalLevel = "High" | "Medium" | "Low";
+
+export type Signal = {
+  id: string;
+  title: string;
+  body: string;
+  relevance: string;
+  date: string;
+  board: string;
+  stage: string;
+  level: SignalLevel;
+  tags: string[];
+  citations: { label: string; page: string; excerpt: string; url: string }[];
+};

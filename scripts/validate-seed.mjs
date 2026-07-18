@@ -6,16 +6,28 @@ import {
   projectEvidenceForLocation,
   validateEvidence,
 } from "./evidence-contract.mjs";
+import { validateFixture } from "./seed.mjs";
 
 const databasePath = path.resolve("data/lamplighter.db");
 const expectMissing = process.argv.includes("--expect-missing");
+const validateFixtures = process.argv.includes("--validate-fixtures");
 
-if (!fs.existsSync(databasePath)) {
+if (validateFixtures) {
+  try {
+    validateFixture();
+    console.log("fixture validation passed");
+  } catch (error) {
+    console.error(`fixture validation failed: ${error instanceof Error ? error.message : String(error)}`);
+    process.exitCode = 1;
+  }
+}
+
+if (!validateFixtures && !fs.existsSync(databasePath)) {
   const message = `seed database is missing: ${databasePath}`;
   console.error(message);
   if (expectMissing) process.exit(0);
   process.exitCode = 1;
-} else {
+} else if (!validateFixtures) {
   if (expectMissing) {
     console.error(`expected missing seed database but found: ${databasePath}`);
     process.exitCode = 1;

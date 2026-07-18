@@ -1,0 +1,214 @@
+import type { DemoSeed } from "./types";
+
+export const demoSeed: DemoSeed = {
+  "version": 1,
+  "locations": [
+    {
+      "id": "indy",
+      "label": "Indianapolis"
+    },
+    {
+      "id": "indiana",
+      "label": "Indiana"
+    },
+    {
+      "id": "federal",
+      "label": "U.S. federal"
+    }
+  ],
+  "records": [
+    {
+      "id": "indy-video-2026-06-01",
+      "locationId": "indy",
+      "locationLabel": "Indianapolis",
+      "sourceKind": "video_transcript",
+      "publisher": "Open Publica",
+      "sourceTitle": "Indianapolis City-County Council Meeting — June 1, 2026",
+      "title": "City-County Council meeting opened",
+      "publishedAt": "2026-06-01T00:00:00Z",
+      "canonicalUrl": "https://www.openpublica.com/meetings/indianapolis-indiana-city-county-council-2026-06-01-6a46ab01b8ebd3518b4bfaf6",
+      "exactQuote": "I will now call to order the Indianapolis City County Council to order.",
+      "locator": {
+        "kind": "timestamp",
+        "startSeconds": 14,
+        "endSeconds": 20
+      }
+    },
+    {
+      "id": "indy-prop-26-030",
+      "locationId": "indy",
+      "locationLabel": "Indianapolis",
+      "sourceKind": "government_record",
+      "publisher": "Indianapolis City-County Council",
+      "sourceTitle": "City-County Council Proposal No. 30, 2026",
+      "title": "Council proposal urges transparent data-center engagement",
+      "publishedAt": "2026-01-05T00:00:00Z",
+      "canonicalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=19373&name=PROP26-030&type=1",
+      "exactQuote": "Developers are discouraged from pursuing local tax abatements for their projects.",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "federal-plaw-119-65",
+      "locationId": "federal",
+      "locationLabel": "U.S. federal",
+      "sourceKind": "government_record",
+      "publisher": "U.S. Government Publishing Office",
+      "sourceTitle": "Public Law 119-65 — Save Our Seas 2.0 Amendments Act",
+      "title": "Save Our Seas 2.0 Amendments Act approved",
+      "publishedAt": "2025-12-26T00:00:00Z",
+      "canonicalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ65/pdf/PLAW-119publ65.pdf",
+      "exactQuote": "Save Our Seas 2.0 Amendments Act",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "federal-plaw-119-40",
+      "locationId": "federal",
+      "locationLabel": "U.S. federal",
+      "sourceKind": "government_record",
+      "publisher": "U.S. Government Publishing Office",
+      "sourceTitle": "Public Law 119-40 — Wetlands Conservation and Access Improvement Act of 2025",
+      "title": "Wetlands Conservation and Access Improvement Act approved",
+      "publishedAt": "2025-11-25T00:00:00Z",
+      "canonicalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ40/pdf/PLAW-119publ40.pdf",
+      "exactQuote": "Wetlands Conservation and Access Improvement Act of 2025",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "federal-plaw-119-36",
+      "locationId": "federal",
+      "locationLabel": "U.S. federal",
+      "sourceKind": "government_record",
+      "publisher": "U.S. Government Publishing Office",
+      "sourceTitle": "Public Law 119-36 — Homebuyers Privacy Protection Act",
+      "title": "Homebuyers Privacy Protection Act approved",
+      "publishedAt": "2025-09-05T00:00:00Z",
+      "canonicalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ36/pdf/PLAW-119publ36.pdf",
+      "exactQuote": "Homebuyers Privacy Protection Act",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "indy-reporting-property-tax",
+      "locationId": "indy",
+      "locationLabel": "Indianapolis",
+      "sourceKind": "reporting",
+      "publisher": "Associated Press",
+      "sourceTitle": "Indiana property tax cuts could lead to reduced funding for Indianapolis crime prevention program",
+      "title": "Reporting: property-tax cuts and Indianapolis crime-prevention funding",
+      "publishedAt": "2025-08-01T00:00:00Z",
+      "canonicalUrl": "https://apnews.com/article/7225cb2b44b0ff68aedbed4d3d468ad7",
+      "exactQuote": "The cuts will cost Indianapolis an estimated $10.5 million in revenue.",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "federal-plaw-119-28",
+      "locationId": "federal",
+      "locationLabel": "U.S. federal",
+      "sourceKind": "government_record",
+      "publisher": "U.S. Government Publishing Office",
+      "sourceTitle": "Public Law 119-28 — Rescissions Act of 2025",
+      "title": "Rescissions Act of 2025 approved",
+      "publishedAt": "2025-07-24T00:00:00Z",
+      "canonicalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ28/pdf/PLAW-119publ28.pdf",
+      "exactQuote": "Rescissions Act of 2025",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "in-eo-25-20",
+      "locationId": "indiana",
+      "locationLabel": "Indiana",
+      "sourceKind": "government_record",
+      "publisher": "State of Indiana",
+      "sourceTitle": "Executive Order 25-20",
+      "title": "Indiana executive order addresses abortion-law execution",
+      "publishedAt": "2025-03-01T00:00:00Z",
+      "canonicalUrl": "https://www.in.gov/gov/files/EO-25-20.pdf",
+      "exactQuote": "All state agencies are directed to ensure that the State of Indiana's abortion laws are fully and faithfully executed.",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "in-eo-25-11",
+      "locationId": "indiana",
+      "locationLabel": "Indiana",
+      "sourceKind": "government_record",
+      "publisher": "State of Indiana",
+      "sourceTitle": "Executive Order 25-11",
+      "title": "Indiana orders review of prior executive orders",
+      "publishedAt": "2025-02-01T00:00:00Z",
+      "canonicalUrl": "https://www.in.gov/gov/files/EO-25-11.pdf",
+      "exactQuote": "The Governor's General Counsel is directed to conduct a review of the previously issued Executive Orders.",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "in-eo-25-10",
+      "locationId": "indiana",
+      "locationLabel": "Indiana",
+      "sourceKind": "government_record",
+      "publisher": "State of Indiana",
+      "sourceTitle": "Executive Order 25-10",
+      "title": "Indiana continues the Executive Council on Cybersecurity",
+      "publishedAt": "2025-01-13T00:00:00Z",
+      "canonicalUrl": "https://www.in.gov/gov/files/EO-25-10.pdf",
+      "exactQuote": "The Indiana Executive Council on Cybersecurity is continued through Executive Order 25-10.",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "indy-prop-24-205",
+      "locationId": "indy",
+      "locationLabel": "Indianapolis",
+      "sourceKind": "government_record",
+      "publisher": "Indianapolis City-County Council",
+      "sourceTitle": "City-County General Ordinance No. 25, 2024",
+      "title": "City-County General Ordinance No. 25, 2024",
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "canonicalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=18732&name=PROP24-205&type=1",
+      "exactQuote": "This ordinance shall be in effect from and after January 1, 2025.",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    },
+    {
+      "id": "indy-prop-25-050",
+      "locationId": "indy",
+      "locationLabel": "Indianapolis",
+      "sourceKind": "government_record",
+      "publisher": "Indianapolis City-County Council",
+      "sourceTitle": "City-County Fiscal Ordinance No. 1, 2025",
+      "title": "City-County Fiscal Ordinance No. 1, 2025",
+      "publishedAt": "2025-01-01T00:00:00Z",
+      "canonicalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=18995&name=PROP25-050&type=1",
+      "exactQuote": "CITY-COUNTY FISCAL ORDINANCE NO. 1, 2025",
+      "locator": {
+        "kind": "page",
+        "pageNumber": 1
+      }
+    }
+  ]
+};
