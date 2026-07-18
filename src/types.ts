@@ -1,22 +1,30 @@
-export type SignalStage = "Upcoming" | "Under review" | "Decision" | "Adopted";
-export type SignalLevel = "High" | "Medium" | "Low";
+export type SourceKind = "government_record" | "video_transcript" | "reporting";
 
-export type Citation = {
+export type DemoLocation = {
+  id: string;
   label: string;
-  page: string;
-  excerpt: string;
-  url: string;
 };
 
-export type Signal = {
+export type EvidenceLocator =
+  | { kind: "page"; pageNumber: number }
+  | { kind: "timestamp"; startSeconds: number; endSeconds?: number };
+
+export type EvidenceRecord = {
   id: string;
+  locationId: string;
+  locationLabel: string;
+  sourceKind: SourceKind;
+  publisher: string;
+  sourceTitle: string;
   title: string;
-  body: string;
-  relevance: string;
-  date: string;
-  board: string;
-  stage: SignalStage;
-  level: SignalLevel;
-  tags: string[];
-  citations: Citation[];
+  publishedAt: string;
+  canonicalUrl: string;
+  exactQuote: string;
+  locator: EvidenceLocator;
+};
+
+export type DemoSeed = {
+  version: 1;
+  locations: DemoLocation[];
+  records: EvidenceRecord[];
 };
