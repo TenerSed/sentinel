@@ -27,11 +27,28 @@ export const demoSeed: DemoSeed = {
       "title": "City-County Council meeting opened",
       "publishedAt": "2026-06-01T00:00:00Z",
       "canonicalUrl": "https://www.openpublica.com/meetings/indianapolis-indiana-city-county-council-2026-06-01-6a46ab01b8ebd3518b4bfaf6",
-      "exactQuote": "I will now call to order the Indianapolis City County Council to order.",
+      "exactQuote": "I will now call to order the Indianapolis City County Council to order",
       "locator": {
         "kind": "timestamp",
         "startSeconds": 14,
         "endSeconds": 20
+      }
+    },
+    {
+      "id": "in-report-2026-03-06",
+      "locationId": "indiana",
+      "locationLabel": "Indiana",
+      "sourceKind": "reporting",
+      "publisher": "Indiana Newsdesk / WTIU PBS",
+      "sourceTitle": "Indiana Newsdesk, Episode 1334, 03/06/2026",
+      "title": "Reporting: Indiana Newsdesk describes Senate Bill 199 review requirement",
+      "publishedAt": "2026-03-06T00:00:00Z",
+      "canonicalUrl": "https://www.pbs.org/video/indiana-newsdesk-episode-1334-03062026-2h6adw/",
+      "exactQuote": "SENATE BILL 199 DIRECTS THE INDIANA COMMISSION FOR HIGHER EDUCATION TO REVIEW DEGREE PROGRAMS AT STATE COLLEGES",
+      "locator": {
+        "kind": "timestamp",
+        "startSeconds": 404,
+        "endSeconds": 411
       }
     },
     {
@@ -60,7 +77,7 @@ export const demoSeed: DemoSeed = {
       "title": "Save Our Seas 2.0 Amendments Act approved",
       "publishedAt": "2025-12-26T00:00:00Z",
       "canonicalUrl": "https://www.govinfo.gov/content/pkg/PLAW-119publ65/pdf/PLAW-119publ65.pdf",
-      "exactQuote": "Save Our Seas 2.0 Amendments Act",
+      "exactQuote": "SAVE OUR SEAS 2.0 AMENDMENTS ACT",
       "locator": {
         "kind": "page",
         "pageNumber": 1
@@ -124,7 +141,7 @@ export const demoSeed: DemoSeed = {
       "title": "Indiana executive order addresses abortion-law execution",
       "publishedAt": "2025-03-01T00:00:00Z",
       "canonicalUrl": "https://www.in.gov/gov/files/EO-25-20.pdf",
-      "exactQuote": "All state agencies are directed to ensure that the State of Indiana's abortion laws are fully and faithfully executed.",
+      "exactQuote": "All state agencies are directed to ensure that the State of Indiana’s abortion laws are fully and faithfully executed,",
       "locator": {
         "kind": "page",
         "pageNumber": 1
@@ -140,7 +157,7 @@ export const demoSeed: DemoSeed = {
       "title": "Indiana orders review of prior executive orders",
       "publishedAt": "2025-02-01T00:00:00Z",
       "canonicalUrl": "https://www.in.gov/gov/files/EO-25-11.pdf",
-      "exactQuote": "The Governor's General Counsel is directed to conduct a review of the previously issued Executive Orders.",
+      "exactQuote": "The Governor’s General Counsel is directed to conduct a review of the previously issued Executive Orders.",
       "locator": {
         "kind": "page",
         "pageNumber": 1
@@ -156,7 +173,7 @@ export const demoSeed: DemoSeed = {
       "title": "Indiana continues the Executive Council on Cybersecurity",
       "publishedAt": "2025-01-13T00:00:00Z",
       "canonicalUrl": "https://www.in.gov/gov/files/EO-25-10.pdf",
-      "exactQuote": "The Indiana Executive Council on Cybersecurity is continued through Executive Order 25-10.",
+      "exactQuote": "shall continue until July 1, 2026.",
       "locator": {
         "kind": "page",
         "pageNumber": 1
@@ -172,7 +189,7 @@ export const demoSeed: DemoSeed = {
       "title": "City-County General Ordinance No. 25, 2024",
       "publishedAt": "2025-01-01T00:00:00Z",
       "canonicalUrl": "https://www.indy.gov/api/v1/indy_proposal_document?content_type=application%2Fpdf&id=18732&name=PROP24-205&type=1",
-      "exactQuote": "This ordinance shall be in effect from and after January 1, 2025.",
+      "exactQuote": "The Indianapolis Short-Term Rental Permitting is hereby established.",
       "locator": {
         "kind": "page",
         "pageNumber": 1

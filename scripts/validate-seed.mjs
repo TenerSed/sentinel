@@ -34,6 +34,7 @@ if (!validateFixtures && !fs.existsSync(databasePath)) {
   } else {
     const database = new Database(databasePath, { readonly: true, fileMustExist: true });
     try {
+      validateFixture();
       database.pragma("foreign_keys = ON");
       assertDatabaseIntegrity(database);
       const locations = database.prepare("SELECT id FROM locations ORDER BY id").all();
