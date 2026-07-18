@@ -1,7 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { CURATED_STORAGE_KEY, emptyCuratedState, parseCuratedState, recordSignal, topicsFromQuestion } from "./curated";
 import { demoChatPresets, findBundledAnswer } from "./demo-chat";
 import { demoSeed } from "./demo-seed";
-import type { AnswerBlock, ChatProviderStatus, ChatThreads, ChatTurn, DemoSeed, EvidenceLocator, EvidenceRecord, GroundedAnswer, SourceKind, UpdateType } from "./types";
+import type { AnswerBlock, ChatProviderStatus, ChatThreads, ChatTurn, CuratedSignal, CuratedState, DemoSeed, EvidenceLocator, EvidenceRecord, GroundedAnswer, SourceKind, UpdateType } from "./types";
 
 type SeedState = { status: "loading" } | { status: "error"; diagnostic: string } | { status: "ready"; seed: DemoSeed };
 type LiveStatus = { available: boolean };
@@ -132,6 +133,8 @@ export default function App() {
   const [live, setLive] = useState<LiveStatus>({ available: false });
   const [threads, setThreads] = useState<ChatThreads>({});
   const [storageReady, setStorageReady] = useState(false);
+  const [curated, setCurated] = useState<CuratedState>(emptyCuratedState);
+  const [curatedStorageReady, setCuratedStorageReady] = useState(false);
   const [question, setQuestion] = useState("");
   const [asking, setAsking] = useState(false);
   const [showFindMore, setShowFindMore] = useState(false);
@@ -160,6 +163,18 @@ export default function App() {
     try { window.localStorage.setItem(storageKey, JSON.stringify(threads)); } catch { /* Storage is optional for the demo. */ }
   }, [storageReady, threads]);
 
+  useEffect(() => {
+    if (state.status !== "ready") return;
+    try { setCurated(parseCuratedState(JSON.parse(window.localStorage.getItem(CURATED_STORAGE_KEY) ?? "{}"), new Set(state.seed.records.map(({ id }) => id)))); }
+    catch { setCurated(emptyCuratedState()); }
+    setCuratedStorageReady(true);
+  }, [state]);
+
+  useEffect(() => {
+    if (!curatedStorageReady) return;
+    try { window.localStorage.setItem(CURATED_STORAGE_KEY, JSON.stringify(curated)); } catch { /* Storage is optional for the demo. */ }
+  }, [curated, curatedStorageReady]);
+
   const records = useMemo(() => state.status === "ready" ? coverageRecords(state.seed, coverageId) : [], [state, coverageId]);
   const packet = useMemo(() => records.slice(0, 6), [records]);
   const selected = records.find((record) => record.id === selectedId) ?? records[0];
@@ -167,6 +182,12 @@ export default function App() {
   const currentTurns = threads[coverageId] ?? [];
   const presets = demoChatPresets.filter((preset) => preset.coverageId === coverageId);
   const suggestionQuestions = [...presets.map(({ question: prompt }) => prompt), ...records.slice(0, 5).map((record) => `What does the public record say about ${record.title}?`)].filter((prompt, index, list) => list.indexOf(prompt) === index).slice(0, 5);
+
+  const appendCuratedSignal = (signal: CuratedSignal) => {
+    if (state.status !== "ready") return;
+    const knownRecordIds = new Set(state.seed.records.map(({ id }) => id));
+    setCurated((current) => recordSignal(current, signal, knownRecordIds));
+  };
 
   const appendTurn = (turn: ChatTurn) => {
     if (validAnswer(turn.answer, packet).status !== "answered" && turn.answer.status !== "insufficient") return;
