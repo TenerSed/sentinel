@@ -25,7 +25,7 @@
 | Retrieval | Precomputed embeddings + local cosine ranking |
 | Profile | Activity-linked updates plus editable civic topics |
 | Cold start | Newest eligible starter view |
-| Document RAG | Deferred; rank surfaced update records only |
+| Document RAG | Explicitly out of scope; rank surfaced update records only |
 
 ## Curated experience
 
@@ -51,4 +51,4 @@
 
 ## Deferred Ideas
 
-- Account/settings tab, full-document RAG, explicit evidence expansion, and provider conversational memory.
+- Account/settings tab, explicit evidence expansion, and provider conversational memory.

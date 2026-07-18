@@ -112,7 +112,6 @@ Create Lamplighter’s Curated tab: rank only the active coverage’s already el
 
 - Thread-based provider conversational memory beyond the existing locally visible threads.
 - Explicit evidence expansion/search across configured government sources and clearly labeled reporting.
-- Full-document PDF/transcript semantic retrieval or RAG feeding Chat.
 - An Account/settings tab or user accounts; topic controls stay in Curated for this phase.
 
 </deferred>
