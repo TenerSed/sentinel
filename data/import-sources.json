@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "indy-council",
+      "locationId": "indy",
+      "publisher": "Indianapolis City-County Council",
+      "kind": "government_record",
+      "url": "https://www.indy.gov/",
+      "allowedHosts": ["www.indy.gov"]
+    },
+    {
+      "id": "indy-video",
+      "locationId": "indy",
+      "publisher": "Open Publica",
+      "kind": "video_transcript",
+      "url": "https://www.openpublica.com/",
+      "allowedHosts": ["www.openpublica.com"]
+    },
+    {
+      "id": "in-governor",
+      "locationId": "indiana",
+      "publisher": "State of Indiana",
+      "kind": "government_record",
+      "url": "https://www.in.gov/gov/",
+      "allowedHosts": ["www.in.gov"]
+    },
+    {
+      "id": "gpo-public-laws",
+      "locationId": "federal",
+      "publisher": "U.S. Government Publishing Office",
+      "kind": "government_record",
+      "url": "https://www.govinfo.gov/",
+      "allowedHosts": ["www.govinfo.gov"]
+    },
+    {
+      "id": "indiana-newsdesk",
+      "locationId": "indiana",
+      "publisher": "Indiana Newsdesk / WTIU PBS",
+      "kind": "reporting",
+      "url": "https://www.pbs.org/video/indiana-newsdesk-episode-1334-03062026-2h6adw/",
+      "allowedHosts": ["www.pbs.org"]
+    }
+  ]
+}
