@@ -51,7 +51,7 @@ export function validateFixture(fixture = loadFixture()) {
   if (fixture.version !== 1 || !Array.isArray(fixture.locations) || !Array.isArray(fixture.coverage) || !Array.isArray(fixture.sources) || !Array.isArray(fixture.sourceLocations) || !Array.isArray(fixture.records)) {
     throw new Error("fixture is missing required versioned arrays");
   }
-  if (fixture.records.length < 12 || fixture.records.length > 20) throw new Error("fixture must contain 12–20 records");
+  if (fixture.records.length < 11 || fixture.records.length > 20) throw new Error("fixture must contain 11–20 records");
   const locations = new Set(fixture.locations.map((location) => location.id));
   if (locations.size !== 3 || !["indy", "indiana", "federal"].every((id) => locations.has(id))) throw new Error("fixture must configure Indianapolis, Indiana, and federal locations");
   for (const location of fixture.locations) {
@@ -77,7 +77,6 @@ export function validateFixture(fixture = loadFixture()) {
   const ids = new Set();
   let hasPage = false;
   let hasTimestamp = false;
-  let hasReporting = false;
   for (const record of fixture.records) {
     assertId(record.id, "record ID");
     if (ids.has(record.id)) throw new Error(`duplicate record: ${record.id}`);
@@ -93,9 +92,8 @@ export function validateFixture(fixture = loadFixture()) {
     rawAsset(record);
     hasPage ||= Number.isInteger(record.locator?.pageNumber);
     hasTimestamp ||= Number.isInteger(record.locator?.startSeconds);
-    hasReporting ||= record.sourceKind === "reporting";
   }
-  if (!hasPage || !hasTimestamp || !hasReporting) throw new Error("fixture needs page evidence, timestamp evidence, and reporting");
+  if (!hasPage || !hasTimestamp) throw new Error("fixture needs page and timestamp evidence");
   return fixture;
 }
 

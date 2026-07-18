@@ -99,22 +99,6 @@ export const demoSeed: DemoSeed = {
       }
     },
     {
-      "id": "indy-reporting-property-tax",
-      "locationId": "indy",
-      "locationLabel": "Indianapolis",
-      "sourceKind": "reporting",
-      "publisher": "Associated Press",
-      "sourceTitle": "Indiana property tax cuts could lead to reduced funding for Indianapolis crime prevention program",
-      "title": "Reporting: property-tax cuts and Indianapolis crime-prevention funding",
-      "publishedAt": "2025-08-01T00:00:00Z",
-      "canonicalUrl": "https://apnews.com/article/7225cb2b44b0ff68aedbed4d3d468ad7",
-      "exactQuote": "The cuts will cost Indianapolis an estimated $10.5 million in revenue.",
-      "locator": {
-        "kind": "page",
-        "pageNumber": 1
-      }
-    },
-    {
       "id": "federal-plaw-119-28",
       "locationId": "federal",
       "locationLabel": "U.S. federal",

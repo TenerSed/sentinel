@@ -26,12 +26,12 @@ status: complete
 
 # Phase 1 Plan 02: Evidence Corpus Summary
 
-**A no-key SQLite corpus now supplies 12 provenance-complete civic records with generated browser-safe evidence data.**
+**A no-key SQLite corpus now supplies 11 provenance-complete civic records with generated browser-safe evidence data.**
 
 ## Accomplishments
 
-- Added 10 official public PDFs, a timestamped public council transcript, and one clearly typed reporting item; all records span Indianapolis, Indiana, and U.S. federal coverage.
-- Added fixture validation for source/location membership, exact quotes, locators, SHA-256 hashes, and the 12–20 record range.
+- Added 10 official public PDFs and a timestamped public council transcript; all records span Indianapolis, Indiana, and U.S. federal coverage.
+- Added fixture validation for source/location membership, exact quotes, locators, SHA-256 hashes, and the 11–20 record range.
 - Built an idempotent lock-protected seed script that writes a temporary database, atomically replaces the committed DB, and regenerates `src/demo-seed.ts` from `projectEvidenceForLocation`.
 
 ## Task Commits
@@ -52,6 +52,7 @@ status: complete
 
 1. **[Rule 1 - Bug] Restored legacy placeholder `Signal` types alongside the new evidence types.** The pushed Vite shell still imports them until Plan 01-03 replaces its placeholder UI; retaining the types keeps the production build green without exposing placeholder data as verified evidence.
 2. **[Rule 2 - Validation] Added the fixture-validation mode to the existing seed validator.** This makes the required hash and provenance checks executable before any database write.
+3. **[Rule 1 - Provenance repair] Removed the AP HTML reporting item.** Its displayed `p. 1` locator was not a real page-addressable citation; the corpus now keeps only records with verifiable page or timestamp evidence.
 
 ## Next Phase Readiness
 

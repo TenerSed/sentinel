@@ -16,14 +16,12 @@
   "sources": [
     { "id": "indy-council", "publisher": "Indianapolis City-County Council", "kind": "government_record", "canonicalUrl": "https://www.indy.gov/" },
     { "id": "indy-video", "publisher": "Open Publica", "kind": "video_transcript", "canonicalUrl": "https://www.openpublica.com/" },
-    { "id": "indy-reporting", "publisher": "Associated Press", "kind": "reporting", "canonicalUrl": "https://apnews.com/" },
     { "id": "in-governor", "publisher": "State of Indiana", "kind": "government_record", "canonicalUrl": "https://www.in.gov/gov/" },
     { "id": "gpo-public-laws", "publisher": "U.S. Government Publishing Office", "kind": "government_record", "canonicalUrl": "https://www.govinfo.gov/" }
   ],
   "sourceLocations": [
     { "sourceId": "indy-council", "locationId": "indy" },
     { "sourceId": "indy-video", "locationId": "indy" },
-    { "sourceId": "indy-reporting", "locationId": "indy" },
     { "sourceId": "in-governor", "locationId": "indiana" },
     { "sourceId": "gpo-public-laws", "locationId": "federal" }
   ],
@@ -51,12 +49,6 @@
       "title": "City-County Council meeting opened", "sourceTitle": "Indianapolis City-County Council Meeting — June 1, 2026", "publishedAt": "2026-06-01T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
       "canonicalUrl": "https://www.openpublica.com/meetings/indianapolis-indiana-city-county-council-2026-06-01-6a46ab01b8ebd3518b4bfaf6", "originalUrl": "https://www.openpublica.com/meetings/indianapolis-indiana-city-county-council-2026-06-01-6a46ab01b8ebd3518b4bfaf6", "contentHash": "sha256:20413a18b2aea86e024437d93417032b679ec40206bbb64e5bc7248c76bc68c8", "rawPath": "data/raw/indy-council-2026-06-01-transcript.txt",
       "quote": "I will now call to order the Indianapolis City County Council to order.", "locator": { "startSeconds": 14, "endSeconds": 20 }
-    },
-    {
-      "id": "indy-reporting-property-tax", "sourceId": "indy-reporting", "sourceKind": "reporting", "locationId": "indy",
-      "title": "Reporting: property-tax cuts and Indianapolis crime-prevention funding", "sourceTitle": "Indiana property tax cuts could lead to reduced funding for Indianapolis crime prevention program", "publishedAt": "2025-08-01T00:00:00Z", "retrievedAt": "2026-07-18T00:00:00Z",
-      "canonicalUrl": "https://apnews.com/article/7225cb2b44b0ff68aedbed4d3d468ad7", "originalUrl": "https://apnews.com/article/7225cb2b44b0ff68aedbed4d3d468ad7", "contentHash": "sha256:c7d4c499043bf1063c14b91e93495df52f38cca05552ebe76279cdfdfa44b8fa", "rawPath": null,
-      "quote": "The cuts will cost Indianapolis an estimated $10.5 million in revenue.", "locator": { "pageNumber": 1 }
     },
     {
       "id": "in-eo-25-10", "sourceId": "in-governor", "sourceKind": "government_record", "locationId": "indiana",
