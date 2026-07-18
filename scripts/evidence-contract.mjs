@@ -146,7 +146,8 @@ export function insertEvidence(database, row) {
     startSeconds: row.start_seconds,
     endSeconds: row.end_seconds,
   });
-  if (!['civic_update', 'recent_public_position'].includes(row.evidence_kind)) throw new Error("evidence kind is invalid");
+  evidenceRow.evidence_kind ??= "civic_update";
+  if (!['civic_update', 'recent_public_position'].includes(evidenceRow.evidence_kind)) throw new Error("evidence kind is invalid");
   insert(database, "evidence", evidenceRow);
 }
 
