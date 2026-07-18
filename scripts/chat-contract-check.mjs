@@ -1,10 +1,17 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { ModuleKind, ScriptTarget, transpileModule } from "typescript";
 import {
   answerQuestion,
   buildPacket,
   isCandidatePositionRequest,
   validateGroundedAnswer,
 } from "../server/chat.mjs";
+
+const demoChatSource = await readFile(new URL("../src/demo-chat.ts", import.meta.url), "utf8");
+const demoChat = await import(`data:text/javascript,${encodeURIComponent(transpileModule(demoChatSource, {
+  compilerOptions: { module: ModuleKind.ESNext, target: ScriptTarget.ES2022 },
+}).outputText)}`);
 
 const insufficient = { status: "insufficient", blocks: [] };
 const indy = buildPacket("indy");
@@ -53,6 +60,23 @@ test("packets are newest-first with stable IDs", () => {
   for (const packet of [indy, indiana, federal]) {
     assert.deepEqual(packet.records, [...packet.records].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt) || a.id.localeCompare(b.id)));
   }
+});
+
+test("bundled presets are packet-valid and location-aware", () => {
+  assert.ok(demoChat.demoChatPresets.length >= 5, "five or more presets");
+  for (const preset of demoChat.demoChatPresets) {
+    const packet = buildPacket(preset.coverageId);
+    assert.ok(packet, `packet for ${preset.coverageId}`);
+    assert.equal(preset.provider.label, "Bundled demo answer");
+    assert.deepEqual(validateGroundedAnswer(preset.answer, packet), preset.answer, preset.question);
+    assert.equal(demoChat.findBundledAnswer(preset.coverageId, `  ${preset.question.toUpperCase()}  `)?.question, preset.question);
+  }
+});
+
+test("bundled lookup refuses arbitrary, cross-location, and candidate-position questions", () => {
+  assert.equal(demoChat.findBundledAnswer("indy", "What is the weather?"), undefined);
+  assert.equal(demoChat.findBundledAnswer("federal", demoChat.demoChatPresets[0].question), undefined);
+  assert.equal(demoChat.findBundledAnswer("indy", "What is the mayor's position on housing?"), undefined);
 });
 
 test("unsupported provider result refuses", async () => {
