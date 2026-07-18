@@ -95,9 +95,17 @@ export function validateFixture(fixture = loadFixture()) {
     if (!sourceById.has(membership.sourceId) || !locations.has(membership.locationId)) throw new Error("source location references an unknown source or location");
     permitted.add(`${membership.sourceId}:${membership.locationId}`);
   }
+  const coveragePairs = new Set();
   for (const coverage of fixture.coverage) {
     if (!locations.has(coverage.locationId) || !locations.has(coverage.coveredLocationId)) throw new Error("coverage references an unknown location");
+    const pair = `${coverage.locationId}:${coverage.coveredLocationId}`;
+    if (coveragePairs.has(pair)) throw new Error(`duplicate coverage: ${pair}`);
+    coveragePairs.add(pair);
   }
+  for (const pair of ["indy:indy", "indy:indiana", "indy:federal", "indiana:indiana", "federal:federal"]) {
+    if (!coveragePairs.has(pair)) throw new Error(`missing required coverage: ${pair}`);
+  }
+  if (coveragePairs.size !== 5) throw new Error("fixture coverage must not broaden direct selections");
   const ids = new Set();
   const sourceKinds = new Set();
   let hasPage = false;
@@ -108,6 +116,7 @@ export function validateFixture(fixture = loadFixture()) {
     ids.add(record.id);
     if (!sourceById.has(record.sourceId) || !locations.has(record.locationId) || !permitted.has(`${record.sourceId}:${record.locationId}`)) throw new Error(`${record.id}: source is not configured for its location`);
     if (record.sourceKind !== sourceById.get(record.sourceId).kind) throw new Error(`${record.id}: source kind mismatch`);
+    if (!["legislation", "office_holder", "policy"].includes(record.updateType)) throw new Error(`${record.id}: invalid update type`);
     sourceKinds.add(record.sourceKind);
     if (typeof record.title !== "string" || typeof record.sourceTitle !== "string" || !record.title || !record.sourceTitle) throw new Error(`${record.id}: titles are required`);
     assertTimestamp(record.publishedAt, `${record.id}: publishedAt`);
@@ -123,6 +132,9 @@ export function validateFixture(fixture = loadFixture()) {
   if (!hasPage || !hasTimestamp) throw new Error("fixture needs page and timestamp evidence");
   if (!["government_record", "video_transcript", "reporting"].every((kind) => sourceKinds.has(kind))) {
     throw new Error("fixture needs government records, video transcripts, and reporting");
+  }
+  if (!["legislation", "office_holder", "policy"].every((type) => fixture.records.some((record) => record.updateType === type))) {
+    throw new Error("fixture needs legislation, office-holder, and policy updates");
   }
   return fixture;
 }
@@ -144,7 +156,7 @@ function writeDatabase(fixture) {
         const claimId = `claim-${record.id}`;
         insert(database, "documents", { id: documentId, source_id: record.sourceId, canonical_url: record.canonicalUrl, title: record.sourceTitle, published_at: record.publishedAt, retrieved_at: record.retrievedAt, content_hash: record.contentHash, raw_text: record.rawPath?.endsWith(".txt") ? raw.toString("utf8") : null });
         insertEvidence(database, { id: evidenceId, document_id: documentId, ordinal: 1, quote: record.quote, canonicalUrl: record.canonicalUrl, page_number: record.locator.pageNumber ?? null, start_seconds: record.locator.startSeconds ?? null, end_seconds: record.locator.endSeconds ?? null });
-        insert(database, "updates", { id: record.id, document_id: documentId, location_id: record.locationId, title: record.title, published_at: record.publishedAt });
+        insert(database, "updates", { id: record.id, document_id: documentId, location_id: record.locationId, update_type: record.updateType, title: record.title, published_at: record.publishedAt });
         insert(database, "claims", { id: claimId, update_id: record.id, text: record.quote });
         insert(database, "claim_evidence", { claim_id: claimId, evidence_id: evidenceId });
       }
@@ -169,7 +181,7 @@ function writeDemoSeed(databaseFile, fixture) {
   const records = [...byId.values()]
     .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt) || a.id.localeCompare(b.id))
     .map(({ pageNumber, startSeconds, endSeconds, ...record }) => record);
-  const seed = { version: 1, locations: fixture.locations, records };
+  const seed = { version: 1, locations: fixture.locations, coverage: fixture.coverage, records };
   const output = `import type { DemoSeed } from "./types";\n\nexport const demoSeed: DemoSeed = ${JSON.stringify(seed, null, 2)};\n`;
   fs.writeFileSync(path.join(root, "src/demo-seed.ts"), output);
 }

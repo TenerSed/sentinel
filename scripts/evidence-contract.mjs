@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS updates (
   id TEXT PRIMARY KEY,
   document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
   location_id TEXT NOT NULL REFERENCES locations(id),
+  update_type TEXT NOT NULL CHECK (update_type IN ('legislation', 'office_holder', 'policy')),
   title TEXT NOT NULL,
   published_at TEXT NOT NULL
 );
@@ -161,6 +162,7 @@ export function projectEvidenceForLocation(database, locationId) {
       u.id AS id,
       u.location_id AS locationId,
       requested.label AS locationLabel,
+      u.update_type AS updateType,
       s.kind AS sourceKind,
       s.publisher AS publisher,
       d.title AS sourceTitle,

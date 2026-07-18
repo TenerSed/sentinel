@@ -5,6 +5,13 @@ export type DemoLocation = {
   label: string;
 };
 
+export type DemoCoverage = {
+  locationId: string;
+  coveredLocationId: string;
+};
+
+export type UpdateType = "legislation" | "office_holder" | "policy";
+
 export type EvidenceLocator =
   | { kind: "page"; pageNumber: number }
   | { kind: "timestamp"; startSeconds: number; endSeconds?: number };
@@ -13,6 +20,7 @@ export type EvidenceRecord = {
   id: string;
   locationId: string;
   locationLabel: string;
+  updateType: UpdateType;
   sourceKind: SourceKind;
   publisher: string;
   sourceTitle: string;
@@ -26,5 +34,6 @@ export type EvidenceRecord = {
 export type DemoSeed = {
   version: 1;
   locations: DemoLocation[];
+  coverage: DemoCoverage[];
   records: EvidenceRecord[];
 };

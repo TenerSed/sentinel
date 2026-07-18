@@ -11,6 +11,7 @@
     "seed": "node scripts/seed.mjs",
     "validate:contract": "node scripts/evidence-contract-check.mjs",
     "validate:seed": "node scripts/validate-seed.mjs",
+    "validate:recent": "node scripts/recent-scope-check.mjs",
     "validate:import": "node scripts/import-check.mjs",
     "import": "node scripts/import.mjs"
   },

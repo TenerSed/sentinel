@@ -16,11 +16,34 @@ export const demoSeed: DemoSeed = {
       "label": "U.S. federal"
     }
   ],
+  "coverage": [
+    {
+      "locationId": "indy",
+      "coveredLocationId": "indy"
+    },
+    {
+      "locationId": "indy",
+      "coveredLocationId": "indiana"
+    },
+    {
+      "locationId": "indy",
+      "coveredLocationId": "federal"
+    },
+    {
+      "locationId": "indiana",
+      "coveredLocationId": "indiana"
+    },
+    {
+      "locationId": "federal",
+      "coveredLocationId": "federal"
+    }
+  ],
   "records": [
     {
       "id": "indy-video-2026-06-01",
       "locationId": "indy",
       "locationLabel": "Indianapolis",
+      "updateType": "office_holder",
       "sourceKind": "video_transcript",
       "publisher": "Open Publica",
       "sourceTitle": "Indianapolis City-County Council Meeting — June 1, 2026",
@@ -38,6 +61,7 @@ export const demoSeed: DemoSeed = {
       "id": "in-report-2026-03-06",
       "locationId": "indiana",
       "locationLabel": "Indiana",
+      "updateType": "legislation",
       "sourceKind": "reporting",
       "publisher": "Indiana Newsdesk / WTIU PBS",
       "sourceTitle": "Indiana Newsdesk, Episode 1334, 03/06/2026",
@@ -55,6 +79,7 @@ export const demoSeed: DemoSeed = {
       "id": "indy-prop-26-030",
       "locationId": "indy",
       "locationLabel": "Indianapolis",
+      "updateType": "policy",
       "sourceKind": "government_record",
       "publisher": "Indianapolis City-County Council",
       "sourceTitle": "City-County Council Proposal No. 30, 2026",
@@ -71,6 +96,7 @@ export const demoSeed: DemoSeed = {
       "id": "federal-plaw-119-65",
       "locationId": "federal",
       "locationLabel": "U.S. federal",
+      "updateType": "legislation",
       "sourceKind": "government_record",
       "publisher": "U.S. Government Publishing Office",
       "sourceTitle": "Public Law 119-65 — Save Our Seas 2.0 Amendments Act",
@@ -87,6 +113,7 @@ export const demoSeed: DemoSeed = {
       "id": "federal-plaw-119-40",
       "locationId": "federal",
       "locationLabel": "U.S. federal",
+      "updateType": "legislation",
       "sourceKind": "government_record",
       "publisher": "U.S. Government Publishing Office",
       "sourceTitle": "Public Law 119-40 — Wetlands Conservation and Access Improvement Act of 2025",
@@ -103,6 +130,7 @@ export const demoSeed: DemoSeed = {
       "id": "federal-plaw-119-36",
       "locationId": "federal",
       "locationLabel": "U.S. federal",
+      "updateType": "legislation",
       "sourceKind": "government_record",
       "publisher": "U.S. Government Publishing Office",
       "sourceTitle": "Public Law 119-36 — Homebuyers Privacy Protection Act",
@@ -119,6 +147,7 @@ export const demoSeed: DemoSeed = {
       "id": "federal-plaw-119-28",
       "locationId": "federal",
       "locationLabel": "U.S. federal",
+      "updateType": "legislation",
       "sourceKind": "government_record",
       "publisher": "U.S. Government Publishing Office",
       "sourceTitle": "Public Law 119-28 — Rescissions Act of 2025",
@@ -135,6 +164,7 @@ export const demoSeed: DemoSeed = {
       "id": "in-eo-25-20",
       "locationId": "indiana",
       "locationLabel": "Indiana",
+      "updateType": "policy",
       "sourceKind": "government_record",
       "publisher": "State of Indiana",
       "sourceTitle": "Executive Order 25-20",
@@ -151,6 +181,7 @@ export const demoSeed: DemoSeed = {
       "id": "in-eo-25-11",
       "locationId": "indiana",
       "locationLabel": "Indiana",
+      "updateType": "office_holder",
       "sourceKind": "government_record",
       "publisher": "State of Indiana",
       "sourceTitle": "Executive Order 25-11",
@@ -167,6 +198,7 @@ export const demoSeed: DemoSeed = {
       "id": "in-eo-25-10",
       "locationId": "indiana",
       "locationLabel": "Indiana",
+      "updateType": "policy",
       "sourceKind": "government_record",
       "publisher": "State of Indiana",
       "sourceTitle": "Executive Order 25-10",
@@ -183,6 +215,7 @@ export const demoSeed: DemoSeed = {
       "id": "indy-prop-24-205",
       "locationId": "indy",
       "locationLabel": "Indianapolis",
+      "updateType": "policy",
       "sourceKind": "government_record",
       "publisher": "Indianapolis City-County Council",
       "sourceTitle": "City-County General Ordinance No. 25, 2024",
@@ -199,6 +232,7 @@ export const demoSeed: DemoSeed = {
       "id": "indy-prop-25-050",
       "locationId": "indy",
       "locationLabel": "Indianapolis",
+      "updateType": "policy",
       "sourceKind": "government_record",
       "publisher": "Indianapolis City-County Council",
       "sourceTitle": "City-County Fiscal Ordinance No. 1, 2025",
