@@ -1,5 +1,16 @@
 # Sentinel — Resident Ally
 
+## Run it in 60 seconds (judges start here)
+
+```bash
+git clone https://github.com/TenerSed/sentinel.git
+cd sentinel
+npm install
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173). The cached demo experience requires no Docker, Neo4j, or API keys. Neo4j and the extraction pipeline are optional and are needed only to rebuild the public-record data from scratch; the Analysis and Graph pages clearly identify that optional live layer when it is offline.
+
 > **The intelligence developers pay lobbyists for — free, for the residents they're building next to.**
 
 Sentinel is a multi-city civic-intelligence product that verifies the public systems used by any U.S. city, ingests what is available, and tells residents exactly how deep that city’s coverage goes. Fishers, Indiana is the fully indexed reference implementation—not the product identity or a silent fallback for other cities.
@@ -73,7 +84,7 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173).
 
-The judging bundle ships with a prebuilt snapshot cache in `data/fishers.db`, so `npm run snapshot` may be skipped for the fastest demo path. Rebuilding snapshots requires the already-ingested Fishers database and populated Neo4j graph; it does not re-ingest the public corpus. The app keeps live provider calls off the request path and serves precomputed results during the demo.
+The judging bundle ships with a prebuilt snapshot cache in `data/demo.db`, so `npm run snapshot` may be skipped for the fastest demo path. Rebuilding snapshots requires the already-ingested `data/fishers.db` extraction database and populated Neo4j graph; it does not re-ingest the public corpus. The app keeps live provider calls off the request path and serves precomputed results during the demo.
 
 ## Three-minute product tour
 

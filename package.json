@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node server/app.mjs",
     "build": "tsc -b && vite build",
+    "build:demo-db": "node scripts/build-demo-db.mjs",
     "preview": "vite preview",
     "demo": "node scripts/validate-seed.mjs && node server/app.mjs",
     "seed": "node scripts/seed.mjs",

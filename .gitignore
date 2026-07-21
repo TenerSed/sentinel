@@ -12,5 +12,7 @@ data/imports.db-*
 data/imports.db-wal
 data/imports.db-shm
 data/fishers.db*
+!data/demo.db
+data/demo.db-*
 data/runtime/
 data/raw/

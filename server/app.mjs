@@ -13,7 +13,7 @@ import {
   cachedNearFeed,
 } from "./near.mjs";
 import { mapCases, mapParcel } from "./map.mjs";
-import { cityMeetingStatus, discoverCity, ingestMeetings } from "./onboard.mjs";
+import { cityMeetingStatus, discoverCity, ingestMeetings, locateCity } from "./onboard.mjs";
 import { createCaseCatalog } from "./cases.mjs";
 import {
   cacheHealth,
@@ -64,8 +64,17 @@ const graphDriver =
       )
     : null;
 let fishersDb = null;
+const configuredDbPath = process.env.SENTINEL_DB
+  ? path.resolve(root, process.env.SENTINEL_DB)
+  : null;
+const runtimeDbPath =
+  configuredDbPath ||
+  [path.join(root, "data", "fishers.db"), path.join(root, "data", "demo.db")].find(
+    (candidate) => fs.existsSync(candidate),
+  );
 try {
-  fishersDb = new Database(path.join(root, "data", "fishers.db"), {
+  if (!runtimeDbPath) throw new Error("No Sentinel runtime database was found.");
+  fishersDb = new Database(runtimeDbPath, {
     fileMustExist: true,
   });
   fishersDb.pragma("journal_mode = WAL");
@@ -73,7 +82,11 @@ try {
   fishersDb.exec(
     "CREATE INDEX IF NOT EXISTS idx_parcels_local_address_nocase ON parcels(local_address COLLATE NOCASE)",
   );
-} catch {
+  console.log(`[sentinel] opened database: ${runtimeDbPath}`);
+} catch (error) {
+  console.warn(
+    `[sentinel] database unavailable${runtimeDbPath ? `: ${runtimeDbPath}` : ""} (${error.message})`,
+  );
   fishersDb = null;
 }
 const caseCatalog = createCaseCatalog(fishersDb);
@@ -358,6 +371,30 @@ const server = http.createServer(async (request, response) => {
   }
   if (
     request.method === "GET" &&
+    request.url?.startsWith("/api/onboard/locate")
+  ) {
+    try {
+      const url = new URL(
+        request.url,
+        `http://${request.headers.host || "localhost"}`,
+      );
+      return json(
+        response,
+        200,
+        await locateCity(
+          url.searchParams.get("lat"),
+          url.searchParams.get("lng"),
+        ),
+      );
+    } catch (error) {
+      return json(response, error.status || 502, {
+        error: error.code || "reverse_geocode_failed",
+        message: error.message || "This location could not be identified.",
+      });
+    }
+  }
+  if (
+    request.method === "GET" &&
     request.url?.startsWith("/api/onboard/discover")
   ) {
     try {
@@ -371,6 +408,7 @@ const server = http.createServer(async (request, response) => {
         await discoverCity(
           url.searchParams.get("city"),
           url.searchParams.get("state"),
+          url.searchParams.get("county"),
         ),
       );
     } catch (error) {

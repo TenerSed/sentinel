@@ -47,6 +47,7 @@ const colors: Record<string, string> = {
 };
 
 export default function TerminalPage() {
+  const [graphOnline, setGraphOnline] = useState<boolean>();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [dossier, setDossier] = useState<Dossier>();
@@ -60,6 +61,20 @@ export default function TerminalPage() {
   // Size the force-graph canvas to its panel; without explicit width/height react-force-graph defaults to the full window and paints over the dossier column.
   const mapRef = useRef<HTMLElement>(null);
   const [mapSize, setMapSize] = useState({ w: 640, h: 520 });
+  useEffect(() => {
+    let active = true;
+    fetch("/api/health")
+      .then((response) => response.json())
+      .then((health: { neo4j?: boolean }) => {
+        if (active) setGraphOnline(Boolean(health.neo4j));
+      })
+      .catch(() => {
+        if (active) setGraphOnline(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   useEffect(() => {
     const el = mapRef.current;
     if (!el) return;
@@ -109,6 +124,11 @@ export default function TerminalPage() {
   };
   useEffect(() => {
     window.clearTimeout(timer.current);
+    if (graphOnline === false) {
+      setResults([]);
+      setSearchState("idle");
+      return;
+    }
     if (query.trim().length < 2) {
       setResults([]);
       setSearchState("idle");
@@ -132,7 +152,7 @@ export default function TerminalPage() {
         });
     }, 180);
     return () => window.clearTimeout(timer.current);
-  }, [query]);
+  }, [graphOnline, query]);
   const prediction = dossier?.analytics.prediction as
     | {
         forecast?: string;
@@ -147,6 +167,16 @@ export default function TerminalPage() {
   return (
     <main className="terminal-page">
       <header className="tool-heading terminal-intro"><div><p className="eyebrow">ANALYSIS</p><h1>Entity dossiers and power maps</h1><p>Inspect people, organizations, parcels, win rates, precedents, and their source-backed relationships.</p></div><a href="/graph">Open raw graph →</a></header>
+      {graphOnline === false ? (
+        <section className="graph-message" role="status">
+          <h2>Optional live graph is offline</h2>
+          <p>
+            Analysis requires a local Neo4j rebuild and is not part of the
+            cached judge experience. The landing page, Tracker, Map, case
+            records, receipts, and onboarding remain available.
+          </p>
+        </section>
+      ) : null}
       <section className="terminal-workspace">
         <aside className="terminal-search">
           <p className="terminal-kicker">ENTITY LOOKUP</p>
@@ -154,9 +184,14 @@ export default function TerminalPage() {
             <span>⌕</span>
             <input
               autoFocus
+              disabled={graphOnline === false}
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search case, person, parcel…"
+              placeholder={
+                graphOnline === false
+                  ? "Optional live graph is offline"
+                  : "Search case, person, parcel…"
+              }
             />
           </label>
           <p className="terminal-hint">
