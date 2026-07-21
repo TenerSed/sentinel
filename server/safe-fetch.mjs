@@ -15,6 +15,9 @@ import net from "node:net";
 // Municipal-data vendors plus the open geodata hosts the pipeline already uses.
 const ALLOWED_SUFFIXES = [
   "legistar.com",
+  // Legistar serves attachment files from a separate document host.
+  "legistar1.com",
+  "legistar2.com",
   "civicclerk.com",
   "primegov.com",
   "escribemeet.com",

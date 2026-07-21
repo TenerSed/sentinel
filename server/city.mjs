@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { ensureCache, readCache, writeCache } from "./cache.mjs";
 import { pdfToText } from "../scripts/fishers/lib/pdf.mjs";
+import { safeFetch } from "./safe-fetch.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -315,7 +316,11 @@ async function fetchBuffer(url, timeoutMs = 20_000) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, {
+    // Document URLs come from vendor API *data* (e.g. Legistar's
+    // EventAgendaFile), not from our own templates, so they get the same
+    // treatment as any other caller-supplied URL: vendor-host allowlist,
+    // private-address rejection, and per-hop redirect revalidation.
+    const response = await safeFetch(url, {
       signal: controller.signal,
       headers: { "user-agent": "Lamplighter civic document ingest/1.0" },
     });

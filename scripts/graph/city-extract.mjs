@@ -133,9 +133,13 @@ async function load(session, result, ctx) {
     const gkey = scopedKey(node);
     if (!gkey) continue;
     const property = NODE_KEYS[node.label];
+    const raw = nodeProps(node);
     const props = {
-      ...nodeProps(node),
+      ...raw,
       [property]: naturalKey(node),
+      // Person/Organization key onto `name_normalized`, so without this the UI
+      // has no display string and falls back to the raw Neo4j element id.
+      name: raw.name || raw.title || naturalKey(node),
       gkey,
       city_slug: citySlug,
       source: ctx.source,
