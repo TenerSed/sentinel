@@ -11,3 +11,6 @@ data/imports.db
 data/imports.db-*
 data/imports.db-wal
 data/imports.db-shm
+data/fishers.db*
+data/runtime/
+data/raw/

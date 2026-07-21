@@ -1,0 +1,2 @@
+import { NODE_KEYS } from './schema.mjs'; import { graphDriver } from './lib/neo4j.mjs';
+const driver=graphDriver(); const s=driver.session(); try { for(const [label,key] of Object.entries(NODE_KEYS)) await s.run(`CREATE CONSTRAINT ${label.toLowerCase()}_${key}_unique IF NOT EXISTS FOR (n:${label}) REQUIRE n.${key} IS UNIQUE`); console.log(`created/verified ${Object.keys(NODE_KEYS).length} constraints`); } finally { await s.close(); await driver.close(); }

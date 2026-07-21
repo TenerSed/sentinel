@@ -1,9 +1,20 @@
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { CURATED_STORAGE_KEY, emptyCuratedState, normalizeTopic, parseCuratedState, rankCuratedRecords, recordSignal, resetCuratedState, topicsFromQuestion } from "./curated";
 import { demoChatPresets, findBundledAnswer } from "./demo-chat";
 import { demoSeed } from "./demo-seed";
 import { supabase } from "./supabase";
+import GraphPage from "./GraphPage";
+import TerminalPage from "./TerminalPage";
+import HomePage from "./HomePage";
+import MapPage from "./MapPage";
+import TrackerPage from "./TrackerPage";
+import CasePage from "./CasePage";
+import AppShell from "./AppShell";
+import OnboardPage from "./OnboardPage";
+import AuthPage from "./AuthPage";
+import { useAuth } from "./AuthContext";
+import MarketingPage from "./MarketingPage";
 import type { AnswerBlock, ChatProviderStatus, ChatThreads, ChatTurn, CuratedSignal, CuratedState, DemoSeed, EvidenceLocator, EvidenceRecord, GroundedAnswer, SourceKind, UpdateType } from "./types";
 
 type SeedState = { status: "loading" } | { status: "error"; diagnostic: string } | { status: "ready"; seed: DemoSeed };
@@ -126,7 +137,7 @@ function AnswerView({ turn, records, onCitation }: { turn: ChatTurn; records: Ev
   </article>;
 }
 
-export default function App() {
+function FeedPage() {
   const [state, setState] = useState<SeedState>({ status: "loading" });
   const [coverageId, setCoverageId] = useState("indy");
   const [selectedId, setSelectedId] = useState<string>();
@@ -339,7 +350,7 @@ export default function App() {
   const curatedControls = <div className="curated-controls"><p className="curated-note">Personalization stays in this browser. Reset it anytime.</p><div className="topic-chips" aria-label="Civic topics">{topicOptions.map((topic) => <button type="button" key={topic} className="topic-chip" aria-pressed={curated.topics.includes(topic)} onClick={() => toggleTopic(topic)}>{topic}</button>)}</div><form className="topic-form" onSubmit={addTopic}><label htmlFor="curated-topic">Add topic</label><input id="curated-topic" value={topicInput} onChange={(event) => setTopicInput(event.target.value)} placeholder="e.g. transit" maxLength={40} /><button type="submit">Add</button></form><button type="button" className="reset-curated" onClick={resetCurated}>Reset Curated</button>{curatedStatus && <p className="curated-status" role="status">{curatedStatus}</p>}</div>;
 
   return <main className="recent-shell">
-    <header className="recent-header"><p className="eyebrow">LAMPLIGHTER / OFFLINE DEMO</p><h1>{activeTab === "chat" ? "Ask about public records" : activeTab === "curated" ? "Curated government updates" : activeTab === "account" ? "Account and local settings" : "Recent government updates"}</h1><p>{activeTab === "chat" ? "Answers stay inside the coverage and surfaced records you selected." : activeTab === "curated" ? "Offline, local personalization over source-grounded updates in the coverage you selected." : activeTab === "account" ? "Sign in with email, then manage this browser’s local demo settings." : "Source-grounded public records for the coverage you selected."}</p>
+    <header className="recent-header"><p className="eyebrow">LAMPLIGHTER / OFFLINE DEMO</p><h1>{activeTab === "chat" ? "Ask about public records" : activeTab === "curated" ? "Curated government updates" : activeTab === "account" ? "Account and local settings" : "Recent government updates"}</h1><p>{activeTab === "chat" ? "Answers stay inside the coverage and surfaced records you selected." : activeTab === "curated" ? "Offline, local personalization over source-grounded updates in the coverage you selected." : activeTab === "account" ? "Sign in with email, then manage this browser’s local demo settings." : "Source-grounded public records for the coverage you selected."}</p><a className="graph-launch" href="/dashboard">Sentinel Resident Ally →</a> · <a className="graph-launch" href="/terminal">Open Civic Terminal →</a> · <a className="graph-launch" href="/graph">Explore the reference civic graph →</a> · <a className="graph-launch" href="/investigate">Investigate patterns →</a>
       {activeTab !== "account" && <label className="coverage-control">Coverage<select value={coverageId} onChange={(event) => selectCoverage(event.target.value)}>{state.seed.locations.map((item) => <option value={item.id} key={item.id}>{item.label}</option>)}</select></label>}
       <div className="seed-status"><span aria-hidden="true" />{activeTab === "chat" ? live.available ? "Live AI available · bundled demos ready" : "Live AI unavailable · bundled demos ready" : activeTab === "curated" ? "Local ranking · offline · no API key required" : activeTab === "account" ? live.available ? "Optional live Chat available" : "Optional live Chat unavailable · bundled demos ready" : "Seed ready · offline · no API key required"}</div>
     </header>
@@ -350,6 +361,37 @@ export default function App() {
       {currentTurns.some((turn) => turn.answer.status === "insufficient") && <section className="refusal-actions"><p>Try a suggested question grounded in the selected records.</p><button type="button" onClick={() => setShowFindMore((visible) => !visible)} aria-expanded={showFindMore}>Find more sources</button>{showFindMore && <p className="find-more-copy">Evidence expansion is not available in this demo. Lamplighter will not search or substitute reporting while answering.</p>}</section>}
       <form className="chat-composer" onSubmit={(event) => void submitQuestion(event)}><label htmlFor="chat-question">Ask a question about {label}</label><textarea id="chat-question" value={question} onChange={(event) => setQuestion(event.target.value)} placeholder="Ask about a cited update…" rows={2} disabled={asking} /><button type="submit" disabled={asking || !question.trim()}>{asking ? "Checking records…" : "Ask"}</button></form></section>{detailPanel}</section>}
     {futureMessage && <p className="future-message" role="status" aria-live="polite">{futureMessage}</p>}
-    <nav className="bottom-nav" aria-label="Lamplighter sections"><button type="button" aria-current={activeTab === "recent" ? "page" : undefined} onClick={() => { setActiveTab("recent"); setRecentOpenId(undefined); setFutureMessage(""); }}>Recent <span>{activeTab === "recent" ? "Active" : "Updates"}</span></button><button type="button" aria-current={activeTab === "curated" ? "page" : undefined} onClick={() => { setActiveTab("curated"); setRecentOpenId(undefined); setFutureMessage(""); }}>Curated <span>{activeTab === "curated" ? "Active" : "Local"}</span></button><button type="button" aria-current={activeTab === "chat" ? "page" : undefined} onClick={() => { setActiveTab("chat"); setRecentOpenId(undefined); setFutureMessage(""); }}>Chat <span>{activeTab === "chat" ? "Active" : "Grounded"}</span></button><button type="button" aria-current={activeTab === "account" ? "page" : undefined} onClick={() => { setActiveTab("account"); setRecentOpenId(undefined); setFutureMessage(""); }}>Account <span>{activeTab === "account" ? "Active" : "Local"}</span></button></nav>
+    <nav className="bottom-nav" aria-label="Lamplighter sections"><button type="button" aria-current={activeTab === "recent" ? "page" : undefined} onClick={() => { setActiveTab("recent"); setRecentOpenId(undefined); setFutureMessage(""); }}>Recent <span>{activeTab === "recent" ? "Active" : "Updates"}</span></button><button type="button" aria-current={activeTab === "curated" ? "page" : undefined} onClick={() => { setActiveTab("curated"); setRecentOpenId(undefined); setFutureMessage(""); }}>Curated <span>{activeTab === "curated" ? "Active" : "Local"}</span></button><button type="button" aria-current={activeTab === "chat" ? "page" : undefined} onClick={() => { setActiveTab("chat"); setRecentOpenId(undefined); setFutureMessage(""); }}>Chat <span>{activeTab === "chat" ? "Active" : "Grounded"}</span></button><button type="button" onClick={() => window.location.assign("/auth")}>Account <span>Sign in</span></button></nav>
   </main>;
+}
+
+function DeepCityBoundary({ children }: { children: ReactNode }) {
+  const auth = useAuth();
+  const city = auth.selectedCity;
+  const chooseReference = async () => {
+    await auth.saveProfile({ city: "Fishers", state: "IN", vendor: "civicclerk", slug: "fishersin", isReference: true, meetingsIngested: 184, sourcesVerified: 3, address: "" });
+    window.location.reload();
+  };
+  if (!city) return <main className="city-boundary"><p className="eyebrow">NO CITY SELECTED</p><h1>Choose a city to see its public record.</h1><p>Sentinel will never drop you into another city’s data without saying so.</p><a href="/onboarding">Choose your city</a></main>;
+  if (!city.isReference) return <main className="city-boundary"><p className="eyebrow">{city.city.toUpperCase()}, {city.state}</p><h1>Deep local records are still being built.</h1><p>{city.sourcesVerified ? `Sources verified and ${(city.meetingsIngested || 0).toLocaleString()} meetings ingested for ${city.city}.` : `No source has been marked verified for ${city.city} yet.`} Deep extraction (documents, video, graph) is built for the reference city Fishers, IN.</p><div><a href="/onboarding">Verify or change city</a><button type="button" onClick={() => void chooseReference()}>View the reference city</button></div></main>;
+  return <><div className="city-data-label"><strong>Fishers, IN</strong><span>Fully indexed reference city</span></div>{children}</>;
+}
+
+export default function App() {
+  const path = window.location.pathname;
+  if (path === "/investigate") {
+    window.location.replace("/terminal");
+    return null;
+  }
+  if (path === "/") return <MarketingPage />;
+  if (path === "/auth") return <AuthPage />;
+  if (path === "/onboard" || path === "/onboarding") return <OnboardPage />;
+  const page = path === "/tracker" ? <DeepCityBoundary><TrackerPage /></DeepCityBoundary>
+    : path === "/case" ? <DeepCityBoundary><CasePage /></DeepCityBoundary>
+      : path === "/dashboard" || path.startsWith("/near") ? <HomePage />
+        : path === "/terminal" ? <DeepCityBoundary><TerminalPage /></DeepCityBoundary>
+          : path === "/map" ? <DeepCityBoundary><MapPage /></DeepCityBoundary>
+            : path === "/graph" ? <DeepCityBoundary><GraphPage /></DeepCityBoundary>
+              : <FeedPage />;
+  return <AppShell>{page}</AppShell>;
 }
