@@ -23,3 +23,7 @@ Ship a clone-and-run cached demo that uses a slim SQLite database and does not r
 
 - Do not copy raw document plaintext, transcript cues, full parcel data, Docker state, or Neo4j data into the demo database.
 - Do not commit.
+
+## Result
+
+Completed on 2026-07-21. `data/demo.db` contains 68 cache keys, 92 case-referenced parcels, a 3,000-address parcel sample, and 4,652 onboarding meetings; after `VACUUM` it is 8.54 MiB (8,957,952 bytes). With `SENTINEL_DB=data/demo.db` and Neo4j unreachable, every required endpoint returned 200 from real cached data, RZ-26-1 retained 12 quotes and 9 receipts, all primary SPA routes returned 200, onboarding retained its 4,652-meeting status, and `npm run build` passed.

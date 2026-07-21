@@ -1,7 +1,11 @@
 import { FormEvent, ReactNode, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 
-const nav = [
+// The reference city has the full stack (cases, parcels, transcripts, graph).
+// An onboarded city has meetings, documents and whatever graph has been built
+// for it, so it advertises only the sections that actually have something in
+// them — five links that all led to the same screen read as a broken navbar.
+const referenceNav = [
   ["Dashboard", "/dashboard"],
   ["Tracker", "/tracker"],
   ["Map", "/map"],
@@ -9,7 +13,13 @@ const nav = [
   ["Graph", "/graph"],
 ] as const;
 
-function activePath(pathname: string) {
+const onboardedNav = [
+  ["Dashboard", "/dashboard"],
+  ["Meetings", "/city"],
+  ["Graph", "/graph"],
+] as const;
+
+function activePath(nav: readonly (readonly [string, string])[], pathname: string) {
   if (pathname === "/case") return "/tracker";
   return nav.find(([, href]) => href === pathname)?.[1];
 }
@@ -29,11 +39,15 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const search = (event: FormEvent) => {
     event.preventDefault();
     const value = query.trim();
-    window.location.href = value ? `/tracker?q=${encodeURIComponent(value)}` : "/tracker";
+    // Onboarded cities search their ingested meetings; only the reference city
+    // has a case tracker to search.
+    const base = auth.selectedCity && !auth.selectedCity.isReference ? "/city" : "/tracker";
+    window.location.href = value ? `${base}?q=${encodeURIComponent(value)}` : base;
   };
 
-  const current = activePath(pathname);
   const city = auth.selectedCity;
+  const nav = city && !city.isReference ? onboardedNav : referenceNav;
+  const current = activePath(nav, pathname);
   return <div className="app-shell">
     <div className="app-trust">VERIFIED FROM PUBLIC RECORD · NEVER GUESSED</div>
     <header className="app-header">

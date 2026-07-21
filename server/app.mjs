@@ -13,7 +13,17 @@ import {
   cachedNearFeed,
 } from "./near.mjs";
 import { mapCases, mapParcel } from "./map.mjs";
-import { cityMeetingStatus, discoverCity, ingestMeetings, locateCity } from "./onboard.mjs";
+import { cityMeetingStatus, discoverCity, ingestMeetings, locateCity, searchCities } from "./onboard.mjs";
+import { streamAdapter, streamDiscovery } from "./discover-stream.mjs";
+import {
+  cityDetail,
+  cityDocuments,
+  citySlug,
+  listCities,
+  resolveRuntimeDbPath,
+} from "./city.mjs";
+import { getJob, startIngestJob } from "./onboard-jobs.mjs";
+import { cityGraphPayload, cityGraphSummary, graphJob, graphJobForCity, startGraphBuild } from "./graph-jobs.mjs";
 import { createCaseCatalog } from "./cases.mjs";
 import {
   cacheHealth,
@@ -64,14 +74,8 @@ const graphDriver =
       )
     : null;
 let fishersDb = null;
-const configuredDbPath = process.env.SENTINEL_DB
-  ? path.resolve(root, process.env.SENTINEL_DB)
-  : null;
-const runtimeDbPath =
-  configuredDbPath ||
-  [path.join(root, "data", "fishers.db"), path.join(root, "data", "demo.db")].find(
-    (candidate) => fs.existsSync(candidate),
-  );
+// Single source of truth, shared with the onboarding/ingest path.
+const runtimeDbPath = resolveRuntimeDbPath();
 try {
   if (!runtimeDbPath) throw new Error("No Sentinel runtime database was found.");
   fishersDb = new Database(runtimeDbPath, {
@@ -345,6 +349,36 @@ const graphExpansion = async (id) => {
   }
 };
 
+// The deep case catalog (parcels, graph entities, video receipts) exists only
+// for the reference city. Every other city has meetings ingested but no case
+// extraction, so these endpoints must return an explicit, honest empty rather
+// than silently handing back Fishers records under another city's name.
+const REFERENCE_CITY = "fishers";
+function caseScope(request, { shape = "list" } = {}) {
+  const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+  const requested = citySlug(url.searchParams.get("city") || "");
+  if (!requested || requested === REFERENCE_CITY) return null;
+  const summary = (() => {
+    try {
+      return listCities().cities.find((city) => city.citySlug === requested) || null;
+    } catch {
+      return null;
+    }
+  })();
+  const reason = summary
+    ? `${summary.city} has ${summary.meetings.toLocaleString()} meetings ingested but no case-level extraction yet. Case records are only built for ${REFERENCE_CITY}. Browse this city's meetings at /api/city?slug=${requested}.`
+    : `No data has been ingested for "${requested}". Onboard the city first. Case records from another city are never substituted.`;
+  const payload = {
+    citySlug: requested,
+    cases: [],
+    unavailable: true,
+    reason,
+    meetingsAvailable: summary?.meetings || 0,
+    meetingsEndpoint: summary ? `/api/city?slug=${requested}` : null,
+  };
+  return shape === "map" ? { ...payload, features: [] } : payload;
+}
+
 const vite = production
   ? null
   : await createViteServer({
@@ -371,6 +405,23 @@ const server = http.createServer(async (request, response) => {
   }
   if (
     request.method === "GET" &&
+    request.url?.startsWith("/api/onboard/search-city")
+  ) {
+    try {
+      const url = new URL(
+        request.url,
+        `http://${request.headers.host || "localhost"}`,
+      );
+      return json(response, 200, await searchCities(url.searchParams.get("q")));
+    } catch (error) {
+      return json(response, error.status || 502, {
+        error: error.code || "city_search_failed",
+        message: error.message || "City search is temporarily unavailable.",
+      });
+    }
+  }
+  if (
+    request.method === "GET" &&
     request.url?.startsWith("/api/onboard/locate")
   ) {
     try {
@@ -392,6 +443,71 @@ const server = http.createServer(async (request, response) => {
         message: error.message || "This location could not be identified.",
       });
     }
+  }
+  // Live per-city graph build: start it, keep using the app, come back to it.
+  if (request.method === "GET" && request.url?.startsWith("/api/graph/build")) {
+    const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+    try {
+      const job = startGraphBuild({
+        citySlug: url.searchParams.get("slug"),
+        place: url.searchParams.get("place"),
+        limit: url.searchParams.get("limit"),
+        concurrency: url.searchParams.get("concurrency"),
+      });
+      json(response, 202, job);
+    } catch (error) {
+      json(response, error.status || 500, {
+        error: error.code || "graph_build_failed",
+        message: error.message,
+      });
+    }
+    return;
+  }
+  if (request.method === "GET" && request.url?.startsWith("/api/graph/status")) {
+    const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+    const id = url.searchParams.get("job");
+    const slug = url.searchParams.get("slug");
+    const job = id ? graphJob(id) : graphJobForCity(slug);
+    const summary = await cityGraphSummary(graphDriver, slug || job?.citySlug);
+    if (!job && !summary.nodeTotal) {
+      json(response, 404, { error: "no_graph_job", message: "No graph has been built for this city yet." });
+      return;
+    }
+    json(response, 200, { job: job || null, graph: summary });
+    return;
+  }
+  if (request.method === "GET" && request.url?.startsWith("/api/city/graph")) {
+    const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+    const slug = url.searchParams.get("slug");
+    const [summary, payload] = [
+      await cityGraphSummary(graphDriver, slug),
+      await cityGraphPayload(graphDriver, slug, Number(url.searchParams.get("limit")) || 220),
+    ];
+    json(response, 200, { ...payload, summary });
+    return;
+  }
+  if (
+    request.method === "GET" &&
+    request.url?.startsWith("/api/onboard/adapter/stream")
+  ) {
+    const url = new URL(
+      request.url,
+      `http://${request.headers.host || "localhost"}`,
+    );
+    await streamAdapter(request, response, url);
+    return;
+  }
+  // Must be matched before /api/onboard/discover, which is a prefix of it.
+  if (
+    request.method === "GET" &&
+    request.url?.startsWith("/api/onboard/discover/stream")
+  ) {
+    const url = new URL(
+      request.url,
+      `http://${request.headers.host || "localhost"}`,
+    );
+    await streamDiscovery(request, response, url);
+    return;
   }
   if (
     request.method === "GET" &&
@@ -427,15 +543,24 @@ const server = http.createServer(async (request, response) => {
         request.url,
         `http://${request.headers.host || "localhost"}`,
       );
-      return json(
-        response,
-        200,
-        await ingestMeetings(
-          url.searchParams.get("vendor"),
-          url.searchParams.get("slug"),
-          url.searchParams.get("city"),
-        ),
-      );
+      const vendor = url.searchParams.get("vendor");
+      const slug = url.searchParams.get("slug");
+      const city = url.searchParams.get("city");
+      // A full ingest takes minutes, so the default is a background job the
+      // client polls. `sync=1` keeps the original blocking behaviour available.
+      if (url.searchParams.get("sync") === "1")
+        return json(response, 200, await ingestMeetings(vendor, slug, city, {
+          state: url.searchParams.get("state"),
+        }));
+      return json(response, 202, startIngestJob({
+        vendor,
+        slug,
+        city,
+        state: url.searchParams.get("state"),
+        documents: url.searchParams.get("documents") !== "0",
+        maxMeetings: Number(url.searchParams.get("maxMeetings")) || 25,
+        budgetMs: Number(url.searchParams.get("budgetMs")) || 120_000,
+      }));
     } catch (error) {
       return json(response, error.status || 500, {
         error: error.code || "onboard_ingest_failed",
@@ -445,11 +570,60 @@ const server = http.createServer(async (request, response) => {
   }
   if (request.method === "GET" && request.url?.startsWith("/api/onboard/status")) {
     const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+    const jobId = url.searchParams.get("job");
+    if (jobId) {
+      const job = getJob(jobId);
+      if (!job)
+        return json(response, 404, {
+          error: "job_not_found",
+          message: "That ingest job is unknown or expired. Start a new ingest.",
+        });
+      return json(response, 200, job);
+    }
     return json(response, 200, cityMeetingStatus(
       url.searchParams.get("city"),
       url.searchParams.get("vendor"),
       url.searchParams.get("slug"),
     ));
+  }
+  if (request.method === "GET" && request.url?.startsWith("/api/cities")) {
+    try {
+      return json(response, 200, listCities());
+    } catch (error) {
+      return json(response, 500, {
+        error: "cities_unavailable",
+        message: error.message || "Onboarded cities could not be read.",
+      });
+    }
+  }
+  if (request.method === "GET" && request.url?.startsWith("/api/city/documents")) {
+    const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+    try {
+      return json(response, 200, cityDocuments(url.searchParams.get("slug"), {
+        limit: url.searchParams.get("limit"),
+      }));
+    } catch (error) {
+      return json(response, error.status || 500, {
+        error: error.code || "city_documents_unavailable",
+        message: error.message || "City documents could not be read.",
+      });
+    }
+  }
+  if (request.method === "GET" && request.url?.startsWith("/api/city")) {
+    const url = new URL(request.url, `http://${request.headers.host || "localhost"}`);
+    try {
+      return json(response, 200, cityDetail(url.searchParams.get("slug"), {
+        limit: url.searchParams.get("limit"),
+        offset: url.searchParams.get("offset"),
+        q: url.searchParams.get("q"),
+        body: url.searchParams.get("body"),
+      }));
+    } catch (error) {
+      return json(response, error.status || 500, {
+        error: error.code || "city_unavailable",
+        message: error.message || "That city could not be read.",
+      });
+    }
   }
   if (request.method === "GET" && request.url?.startsWith("/api/stats")) {
     const cached = readCache(fishersDb, "stats");
@@ -517,6 +691,8 @@ const server = http.createServer(async (request, response) => {
     }
   }
   if (request.method === "GET" && request.url?.startsWith("/api/cases")) {
+    const scope = caseScope(request);
+    if (scope) return json(response, 200, scope);
     try {
       const url = new URL(
         request.url,
@@ -602,6 +778,8 @@ const server = http.createServer(async (request, response) => {
     });
   }
   if (request.method === "GET" && request.url?.startsWith("/api/map/cases")) {
+    const scope = caseScope(request, { shape: "map" });
+    if (scope) return json(response, 200, scope);
     const cached = readCache(fishersDb, "map:cases");
     if (cached !== null) return cachedJson(response, cached, true);
     try {

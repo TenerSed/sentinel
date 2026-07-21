@@ -676,3 +676,109 @@ body { background: var(--cream); color: var(--ink); font-family: "DM Sans", Aria
 .shallow-dashboard-grid .resident-dashboard-grid > section { min-height: 150px; }
 .shallow-address { display: grid; gap: 6px; color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; }.shallow-address input { min-height: 42px; padding: 9px 10px; border: 1px solid #c8bdaf; background: #eee8df; color: #777; }
 @media (max-width: 760px) { .app-city-switcher { margin-left: auto; }.shallow-dashboard-grid .resident-dashboard-grid { grid-template-columns: 1fr; }.universal-hero-actions { flex-direction: column; }.universal-hero-actions a, .universal-hero-actions button { text-align: center; } }
+
+/* Search-first city chooser (onboarding) */
+.onboarding-citysearch { position: relative; z-index: 1200; margin: 0 0 14px; }
+.onboarding-citysearch input { width: 100%; padding: 13px 14px; border: 1px solid #c9c0ad; border-radius: 6px; background: #fffaf1; color: #1f2d27; font: 16px/1.3 "DM Sans", Arial, sans-serif; }
+.onboarding-citysearch input:focus { outline: 2px solid #9a3f2b; outline-offset: 1px; }
+.onboarding-citysearch-status { position: absolute; right: 12px; top: 14px; color: #7b7566; font: 11px "DM Mono", monospace; }
+.onboarding-suggestions { position: absolute; z-index: 1200; left: 0; right: 0; margin: 4px 0 0; padding: 4px; list-style: none; background: #fffaf1; border: 1px solid #c9c0ad; border-radius: 6px; box-shadow: 0 10px 26px rgba(31,45,39,.16); }
+.onboarding-suggestions li { margin: 0; }
+.onboarding-suggestions button { display: flex; flex-direction: column; gap: 2px; width: 100%; padding: 9px 10px; border: 0; border-radius: 4px; background: transparent; text-align: left; cursor: pointer; }
+.onboarding-suggestions button:hover { background: #f2ece0; }
+.onboarding-suggestions b { color: #1f2d27; font-size: 14px; }
+.onboarding-suggestions span { color: #7b7566; font: 11px "DM Mono", monospace; }
+
+/* Onboarded-city record browser. A city with meetings ingested but no deep
+   extraction gets its own real records plus an explicit statement of gaps. */
+.city-page { padding: 1.5rem clamp(1rem, 4vw, 3rem) 4rem; }
+.city-gap-banner {
+  display: flex; flex-direction: column; gap: .35rem;
+  margin: 1rem 0 1.5rem; padding: .9rem 1.1rem;
+  border: 1px solid rgba(190, 140, 40, .45); border-left-width: 3px;
+  border-radius: 6px; background: rgba(190, 140, 40, .08);
+}
+.city-gap-banner strong { font-size: .82rem; letter-spacing: .04em; text-transform: uppercase; }
+.city-gap-banner span { font-size: .88rem; opacity: .85; line-height: 1.5; }
+.city-meeting-list { display: flex; flex-direction: column; border-top: 1px solid rgba(128,128,128,.22); }
+.city-meeting-row {
+  display: grid; grid-template-columns: 8.5rem 1fr auto; gap: 1rem; align-items: center;
+  padding: .75rem .5rem; border-bottom: 1px solid rgba(128,128,128,.16);
+  color: inherit; text-decoration: none;
+}
+.city-meeting-row:hover { background: rgba(128,128,128,.07); }
+.city-meeting-row.loading { min-height: 3rem; opacity: .35; background: rgba(128,128,128,.1); }
+.city-meeting-row time { font-variant-numeric: tabular-nums; font-size: .85rem; opacity: .75; }
+.city-meeting-row div { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.city-meeting-row strong { font-size: .95rem; font-weight: 550; }
+.city-meeting-row small { font-size: .8rem; opacity: .65; }
+.city-meeting-docs { font-size: .78rem; opacity: .7; white-space: nowrap; }
+.city-pager { display: flex; align-items: center; justify-content: center; gap: 1rem; padding: 1.5rem 0; }
+.city-pager button { padding: .45rem .9rem; border-radius: 5px; cursor: pointer; }
+.city-pager button:disabled { opacity: .4; cursor: default; }
+.city-pager span { font-size: .85rem; opacity: .75; font-variant-numeric: tabular-nums; }
+.city-boundary-footer {
+  display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+  padding: 1.25rem clamp(1rem, 4vw, 3rem); border-top: 1px solid rgba(128,128,128,.2);
+}
+@media (max-width: 700px) {
+  .city-meeting-row { grid-template-columns: 1fr; gap: .25rem; }
+  .city-meeting-docs { white-space: normal; }
+}
+
+/* Live ingestion screen: discovery, ingest and graph build as they happen. */
+.live-pipeline { max-width: 60rem; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+.live-pipeline header h1 { font-size: clamp(1.9rem, 4vw, 2.8rem); margin: .25rem 0 .75rem; }
+.live-pipeline-lede { max-width: 46rem; opacity: .78; line-height: 1.55; }
+.live-pipeline-phases { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; padding: 0; margin: 2rem 0 1.5rem; }
+.live-pipeline-phases li { flex: 1 1 12rem; padding: .6rem .85rem; border: 1px solid currentColor; border-radius: .5rem; opacity: .35; font-size: .82rem; letter-spacing: .04em; text-transform: uppercase; }
+.live-pipeline-phases li.active { opacity: 1; font-weight: 700; }
+.live-pipeline-phases li.complete { opacity: .7; }
+.live-pipeline-steps { display: grid; gap: .6rem; }
+.live-step { display: flex; gap: .8rem; padding: .8rem .95rem; border-radius: .55rem; border: 1px solid rgba(128,128,128,.28); align-items: flex-start; }
+.live-step p { margin: .3rem 0 0; font-size: .88rem; opacity: .8; line-height: 1.5; }
+.live-step-glyph { font-weight: 700; min-width: 1.2rem; }
+.live-step.running { opacity: .85; }
+.live-step.not_found .live-step-glyph { opacity: .55; }
+.live-step-citations { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; gap: .2rem; }
+.live-step-citations a { font-size: .8rem; opacity: .75; }
+.live-probe-log { margin-top: 1.4rem; border: 1px solid rgba(128,128,128,.28); border-radius: .6rem; padding: .9rem 1rem; }
+.live-probe-heading { margin: 0 0 .5rem; font-size: .76rem; letter-spacing: .08em; text-transform: uppercase; opacity: .65; }
+.live-probe-log ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .25rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; }
+.live-probe-log li { display: grid; grid-template-columns: minmax(0,1fr) 3rem minmax(0,1.4fr); gap: .6rem; align-items: baseline; }
+.live-probe-log li.miss { opacity: .45; }
+.live-probe-log li.hit { font-weight: 700; }
+.live-probe-log em { font-style: normal; opacity: .8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.live-pipeline-counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: .75rem; margin-top: 1.6rem; }
+.live-pipeline-counters div { border: 1px solid rgba(128,128,128,.28); border-radius: .6rem; padding: .9rem; text-align: center; }
+.live-pipeline-counters strong { display: block; font-size: 1.65rem; font-variant-numeric: tabular-nums; }
+.live-pipeline-counters span { font-size: .76rem; letter-spacing: .05em; text-transform: uppercase; opacity: .68; }
+.live-graph-progress { margin-top: 1.2rem; }
+.live-graph-bar { height: .5rem; border-radius: 999px; background: rgba(128,128,128,.22); overflow: hidden; }
+.live-graph-bar span { display: block; height: 100%; background: currentColor; transition: width .6s ease; }
+.live-graph-progress p { margin: .55rem 0 0; font-size: .86rem; opacity: .8; line-height: 1.5; }
+.live-pipeline-sources { margin-top: 1.8rem; }
+.live-pipeline-sources ul { list-style: none; padding: 0; margin: 0; display: grid; gap: .6rem; }
+.live-pipeline-sources li { border: 1px solid rgba(128,128,128,.28); border-radius: .6rem; padding: .8rem .95rem; display: grid; gap: .25rem; }
+.live-pipeline-sources a { font-size: .82rem; word-break: break-all; }
+.live-pipeline-sources em { font-style: normal; font-size: .85rem; opacity: .78; }
+.live-pipeline-error { margin-top: 1.2rem; padding: .8rem 1rem; border-radius: .55rem; border: 1px solid rgba(200,60,60,.5); }
+@media (max-width: 40rem) {
+  .live-probe-log li { grid-template-columns: minmax(0,1fr) 2.5rem; }
+  .live-probe-log em { display: none; }
+}
+
+/* Always-visible overall progress across discovery, ingest and graph build. */
+.live-overall { margin: 0 0 1.5rem; }
+.live-overall-bar { height: .55rem; border-radius: 999px; background: rgba(128,128,128,.2); overflow: hidden; }
+.live-overall-bar span { display: block; height: 100%; background: currentColor; border-radius: 999px; transition: width .8s cubic-bezier(.4,0,.2,1); }
+.live-overall-bar span.working { background-image: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.55) 50%, transparent 100%); background-size: 2.5rem 100%; background-repeat: repeat-x; animation: live-sheen 1.1s linear infinite; }
+@keyframes live-sheen { from { background-position: 0 0; } to { background-position: 2.5rem 0; } }
+.live-overall-meta { display: flex; justify-content: space-between; gap: 1rem; margin-top: .5rem; font-size: .84rem; opacity: .8; }
+.live-overall-clock { font-variant-numeric: tabular-nums; opacity: .65; }
+.live-step.running .live-step-glyph { animation: live-pulse 1s ease-in-out infinite; }
+@keyframes live-pulse { 0%,100% { opacity: .35; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .live-overall-bar span.working { animation: none; }
+  .live-step.running .live-step-glyph { animation: none; }
+}

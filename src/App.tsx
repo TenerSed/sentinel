@@ -15,6 +15,7 @@ import OnboardPage from "./OnboardPage";
 import AuthPage from "./AuthPage";
 import { useAuth } from "./AuthContext";
 import MarketingPage from "./MarketingPage";
+import CityPage from "./CityPage";
 import type { AnswerBlock, ChatProviderStatus, ChatThreads, ChatTurn, CuratedSignal, CuratedState, DemoSeed, EvidenceLocator, EvidenceRecord, GroundedAnswer, SourceKind, UpdateType } from "./types";
 
 type SeedState = { status: "loading" } | { status: "error"; diagnostic: string } | { status: "ready"; seed: DemoSeed };
@@ -365,7 +366,33 @@ function FeedPage() {
   </main>;
 }
 
-function DeepCityBoundary({ children }: { children: ReactNode }) {
+// Mirrors citySlug() in server/city.mjs so the client asks for the same key.
+function citySlugOf(value: string) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+}
+
+type DeepSection = "tracker" | "case" | "terminal" | "map" | "graph";
+
+function sectionTitle(section: DeepSection, city: string) {
+  if (section === "map") return `No parcel geometry for ${city} yet.`;
+  if (section === "graph") return `No entity graph for ${city} yet.`;
+  if (section === "terminal") return `No entity analysis for ${city} yet.`;
+  return `No case-level records for ${city} yet.`;
+}
+
+function sectionDetail(section: DeepSection, city: string) {
+  if (section === "map")
+    return `Parcel boundaries and per-address lookups are only built for the reference city. ${city}'s meetings and documents are ingested and searchable.`;
+  if (section === "graph" || section === "terminal")
+    return `Entity extraction turns ${city}'s agendas and minutes into people, organisations and cases. Until that build runs for this city, there is nothing here to show — and Fishers' graph is not shown in its place.`;
+  return `Cases, applicants and vote histories are extracted from minutes. That extraction has not been run for ${city} yet, so there are no cases to track.`;
+}
+
+function DeepCityBoundary({ children, section }: { children: ReactNode; section: DeepSection }) {
   const auth = useAuth();
   const city = auth.selectedCity;
   const chooseReference = async () => {
@@ -373,8 +400,44 @@ function DeepCityBoundary({ children }: { children: ReactNode }) {
     window.location.reload();
   };
   if (!city) return <main className="city-boundary"><p className="eyebrow">NO CITY SELECTED</p><h1>Choose a city to see its public record.</h1><p>Sentinel will never drop you into another city’s data without saying so.</p><a href="/onboarding">Choose your city</a></main>;
-  if (!city.isReference) return <main className="city-boundary"><p className="eyebrow">{city.city.toUpperCase()}, {city.state}</p><h1>Deep local records are still being built.</h1><p>{city.sourcesVerified ? `Sources verified and ${(city.meetingsIngested || 0).toLocaleString()} meetings ingested for ${city.city}.` : `No source has been marked verified for ${city.city} yet.`} Deep extraction (documents, video, graph) is built for the reference city Fishers, IN.</p><div><a href="/onboarding">Verify or change city</a><button type="button" onClick={() => void chooseReference()}>View the reference city</button></div></main>;
+  // An onboarded city has meetings and documents but no cases, parcels or
+  // transcripts. Each section says what IS missing for this city rather than
+  // every route rendering the same meetings list, which made the navbar look
+  // broken. Fishers data is never shown in its place.
+  if (!city.isReference)
+    return (
+      <>
+        <main className="city-boundary">
+          <p className="eyebrow">NOT BUILT FOR {city.city.toUpperCase()} YET</p>
+          <h1>{sectionTitle(section, city.city)}</h1>
+          <p>{sectionDetail(section, city.city)}</p>
+          <a href="/city">Browse {city.city}&rsquo;s ingested meetings</a>
+        </main>
+        <div className="city-boundary-footer">
+          <a href="/onboarding">Verify or change city</a>
+          <button type="button" onClick={() => void chooseReference()}>
+            View the fully indexed reference city (Fishers, IN)
+          </button>
+        </div>
+      </>
+    );
   return <><div className="city-data-label"><strong>Fishers, IN</strong><span>Fully indexed reference city</span></div>{children}</>;
+}
+
+// `/city` is the onboarded city's own home: the meetings and documents actually
+// ingested for it. Reachable directly rather than by hijacking other routes.
+function OnboardedCityRoute() {
+  const auth = useAuth();
+  const city = auth.selectedCity;
+  if (!city)
+    return (
+      <main className="city-boundary">
+        <p className="eyebrow">NO CITY SELECTED</p>
+        <h1>Choose a city to see its public record.</h1>
+        <a href="/onboarding">Choose your city</a>
+      </main>
+    );
+  return <CityPage slug={citySlugOf(city.city)} />;
 }
 
 export default function App() {
@@ -386,12 +449,13 @@ export default function App() {
   if (path === "/") return <MarketingPage />;
   if (path === "/auth") return <AuthPage />;
   if (path === "/onboard" || path === "/onboarding") return <OnboardPage />;
-  const page = path === "/tracker" ? <DeepCityBoundary><TrackerPage /></DeepCityBoundary>
-    : path === "/case" ? <DeepCityBoundary><CasePage /></DeepCityBoundary>
+  const page = path === "/tracker" ? <DeepCityBoundary section="tracker"><TrackerPage /></DeepCityBoundary>
+    : path === "/case" ? <DeepCityBoundary section="case"><CasePage /></DeepCityBoundary>
       : path === "/dashboard" || path.startsWith("/near") ? <HomePage />
-        : path === "/terminal" ? <DeepCityBoundary><TerminalPage /></DeepCityBoundary>
-          : path === "/map" ? <DeepCityBoundary><MapPage /></DeepCityBoundary>
-            : path === "/graph" ? <DeepCityBoundary><GraphPage /></DeepCityBoundary>
-              : <FeedPage />;
+        : path === "/city" ? <OnboardedCityRoute />
+          : path === "/terminal" ? <DeepCityBoundary section="terminal"><TerminalPage /></DeepCityBoundary>
+            : path === "/map" ? <DeepCityBoundary section="map"><MapPage /></DeepCityBoundary>
+              : path === "/graph" ? <DeepCityBoundary section="graph"><GraphPage /></DeepCityBoundary>
+                : <FeedPage />;
   return <AppShell>{page}</AppShell>;
 }

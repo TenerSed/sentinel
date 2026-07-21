@@ -681,8 +681,15 @@ export async function nearCase(driver, db, caseNumber) {
             `${detail.opposition.length} linked public-comment signal${detail.opposition.length === 1 ? "" : "s"}; outcome: ${outcome(detail.status)}. Vote: ${vote}.`,
           detail.case_number,
         ),
+        // Only claim a base rate from REAL land-use precedents. Agenda-packet filename
+        // artifacts (e.g. "012026C") were counted as decided cases and produced a bogus 100%.
         odds: cite(
-          `Comparable decisions were approved ${prediction.approval_rate}% of the time (${prediction.approved}/${prediction.total}).`,
+          (() => {
+            const landUseRe = /^(RZ|PUD|VA|SE|ANX|TA|SUP|DP|PC)-?\d/i;
+            const real = (prediction.precedent_case_numbers || []).filter((value) => landUseRe.test(String(value || "").trim()));
+            if (real.length < 5) return "Not enough decided land-use cases in the public record to compute a reliable approval rate for comparable requests.";
+            return `Comparable decisions were approved ${prediction.approval_rate}% of the time (${prediction.approved}/${prediction.total}).`;
+          })(),
           detail.case_number,
         ),
         drafted_comment: cite(

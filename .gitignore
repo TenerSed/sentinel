@@ -14,5 +14,6 @@ data/imports.db-shm
 data/fishers.db*
 !data/demo.db
 data/demo.db-*
+data/lamplighter.db-*
 data/runtime/
 data/raw/

@@ -2,13 +2,21 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Database from "better-sqlite3";
 import { ensureCache, readCache, writeCache } from "./cache.mjs";
+import {
+  citySlug,
+  openCityDb,
+  portalUrlFor,
+  rebuildCitySummary,
+  resolveRuntimeDbPath,
+} from "./city.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const dbPath = path.join(root, "data", "lamplighter.db");
+// Canonical runtime database — the same file the HTTP layer serves from.
+const dbPath = resolveRuntimeDbPath();
 const REQUEST_TIMEOUT_MS = 6_000;
 const WEB_SEARCH_TIMEOUT_MS = 40_000;
-const MAX_CANDIDATES = 6;
-const MAX_LLM_CANDIDATES = 5;
+const MAX_CANDIDATES = 14;
+const MAX_LLM_CANDIDATES = 9;
 const MAX_ARCGIS_SERVICES = 4;
 const KNOWN_VENDORS = [
   "civicclerk", "legistar", "escribe", "primegov", "novusagenda",
@@ -30,6 +38,9 @@ const STATE_ABBR = {
   Guam: "GU", "American Samoa": "AS", "Northern Mariana Islands": "MP",
   "United States Virgin Islands": "VI",
 };
+const STATE_NAME = Object.fromEntries(
+  Object.entries(STATE_ABBR).map(([name, abbreviation]) => [abbreviation, name]),
+);
 
 const cleanText = (value, max = 120) =>
   String(value || "")
@@ -43,6 +54,9 @@ const slugify = (value) =>
     .replace(/[^a-z0-9]/g, "")
     .slice(0, 60);
 const unique = (values) => [...new Set(values.filter(Boolean))];
+// Re-exported so the streaming discovery route can reuse the exact same
+// normalisation the batch route uses (identical candidates, identical probes).
+export { cleanText, slugify, unique, MAX_CANDIDATES, STATE_NAME };
 const failureReason = (error) =>
   error?.name === "AbortError"
     ? "Timed out before the endpoint responded."
@@ -241,28 +255,91 @@ export async function locateCity(latValue, lngValue) {
   return located;
 }
 
-function deterministicProposal(city, state, countyValue) {
+export async function searchCities(queryValue) {
+  const query = cleanText(queryValue, 120);
+  if (query.length < 3)
+    throw Object.assign(new Error("Enter at least 3 characters to search for a U.S. city."), {
+      status: 400,
+      code: "invalid_city_query",
+    });
+
+  const cacheKey = `onboard:search-city:v1:${query.toLowerCase()}`;
+  const db = locateDb();
+  try {
+    const cached = readCache(db, cacheKey);
+    if (Array.isArray(cached)) return cached;
+  } finally {
+    db.close();
+  }
+
+  const url = new URL("https://nominatim.openstreetmap.org/search");
+  url.searchParams.set("q", query);
+  url.searchParams.set("format", "json");
+  url.searchParams.set("limit", "5");
+  url.searchParams.set("addressdetails", "1");
+  url.searchParams.set("countrycodes", "us");
+  let response;
+  let body;
+  try {
+    ({ response, body } = await fetchJson(url, LOCATE_TIMEOUT_MS, {
+      headers: { "user-agent": "sentinel-civic/1.0 (city search for civic onboarding)" },
+    }));
+  } catch (error) {
+    throw Object.assign(new Error(`City search is temporarily unavailable: ${failureReason(error)}`), {
+      status: 502,
+      code: "city_search_unavailable",
+    });
+  }
+  if (!response.ok || !Array.isArray(body))
+    throw Object.assign(new Error(`City search is temporarily unavailable (HTTP ${response.status}).`), {
+      status: 502,
+      code: "city_search_unavailable",
+    });
+
+  const results = body.flatMap((row) => {
+    const address = row?.address || {};
+    const countryCode = String(address.country_code || "").toLowerCase();
+    const city = cleanText(address.city || address.town || address.village || address.municipality, 100);
+    const state = cleanText(address.state, 80);
+    const stateAbbr = stateAbbreviation(state, address["ISO3166-2-lvl4"]);
+    const county = cleanText(address.county, 120);
+    const lat = Number(row?.lat);
+    const lng = Number(row?.lon);
+    if (countryCode !== "us" || !city || !state || !stateAbbr || !county || !Number.isFinite(lat) || !Number.isFinite(lng)) return [];
+    return [{
+      label: `${city}, ${state} · ${county}`,
+      city,
+      state,
+      stateAbbr,
+      county,
+      lat,
+      lng,
+    }];
+  }).filter((row, index, rows) => rows.findIndex((other) =>
+    other.city === row.city && other.stateAbbr === row.stateAbbr && other.county === row.county
+  ) === index).slice(0, 5);
+
+  const writeDb = locateDb();
+  try {
+    writeCache(writeDb, cacheKey, results);
+  } finally {
+    writeDb.close();
+  }
+  return results;
+}
+
+export function deterministicProposal(city, state, countyValue) {
   const citySlug = slugify(city);
   const stateSlug = slugify(state);
-  const countyByCity = {
-    "carmel:IN": "Hamilton County Indiana",
-    "fishers:IN": "Hamilton County Indiana",
-    "san jose:CA": "Santa Clara County",
-    "mountain view:CA": "Santa Clara County",
-  };
-  const county = cleanText(countyValue, 120) || countyByCity[`${city.toLowerCase()}:${state}`] || "";
+  const stateNameSlug = slugify(STATE_NAME[state]);
+  const county = cleanText(countyValue, 120);
   return {
-    civicclerkSlugs: unique([
-      `${citySlug}${stateSlug}`,
-      citySlug,
-      `cityof${citySlug}`,
-      `${citySlug}${stateSlug === "ca" ? "ca" : stateSlug}`,
-    ]),
-    legistarSlugs: unique([
+    candidates: unique([
       citySlug,
       `${citySlug}${stateSlug}`,
+      `${citySlug}${stateNameSlug}`,
       `cityof${citySlug}`,
-      stateSlug === "ca" ? `${citySlug}ca` : "",
+      `cityof${citySlug}${stateSlug}`,
     ]),
     county,
     arcgisQuery: county ? `parcels ${county} ${state}` : `parcels ${city} ${state}`,
@@ -362,13 +439,13 @@ function knownPortalProbeUrls(candidate) {
   return unique(urls);
 }
 
-async function searchMeetingPortals(city, state) {
+export async function proposeTenantCandidates(city, state) {
   if (!process.env.OPENROUTER_API_KEY)
     return {
       candidates: [],
-      reason: "OPENROUTER_API_KEY is not configured; web-search discovery was skipped.",
+      reason: "OPENROUTER_API_KEY is not configured; deterministic candidates were used.",
     };
-  const prompt = `Search the live web for the official city-government meeting agenda portal for ${city}, ${state}. Find the portal hostname and vendor, not the city's general home page. Return strict JSON only in this exact shape: {"candidates":[{"host":"portal.example.gov","vendor":"vendor name","why":"brief evidence this belongs to the city"}]}. Return no more than 5 candidates. Common vendors include ${KNOWN_VENDORS.join(", ")}, but return any real official portal you find. Prefer direct public agenda, meeting, or legislative-management portals. Do not claim a portal works; our code will verify every candidate.`;
+  const prompt = `Propose 9 plausible Legistar or CivicClerk tenant identifiers for ${city}, ${STATE_NAME[state] || state} (${state}). Use your knowledge of how this specific city's civic portal is actually named, plus common naming conventions. Naming is irregular: Austin uses "austintexas", San Jose uses "sanjose", and Fishers uses "fishersin". Return strict JSON only in this exact shape: {"candidates":["slug1","slug2"]}. Return 8-12 lowercase alphanumeric candidates, ordered most likely first. Do not return URLs, prose, or claim that any candidate is verified; the server probes every candidate independently.`;
   try {
     const { response, body } = await fetchJson(
       "https://openrouter.ai/api/v1/chat/completions",
@@ -382,13 +459,14 @@ async function searchMeetingPortals(city, state) {
           "x-title": "Lamplighter City Onboarding",
         },
         body: JSON.stringify({
-          model: "deepseek/deepseek-v4-flash:online",
+          model: process.env.OPENROUTER_MODEL || "deepseek/deepseek-v4-flash",
           reasoning: { enabled: false },
+          response_format: { type: "json_object" },
           messages: [
             {
               role: "system",
               content:
-                "Use web search to find candidates. Return JSON only. Candidate claims are untrusted until independently probed.",
+                "Return JSON only. Tenant guesses are untrusted until independently probed.",
             },
             { role: "user", content: prompt },
           ],
@@ -398,37 +476,27 @@ async function searchMeetingPortals(city, state) {
     if (!response.ok) throw new Error(`OpenRouter returned HTTP ${response.status}.`);
     const parsed = parseJsonObject(body?.choices?.[0]?.message?.content);
     const rows = Array.isArray(parsed?.candidates) ? parsed.candidates : [];
-    const seen = new Set();
-    const candidates = rows.flatMap((row) => {
-      const normalized = normalizePortalCandidate(row?.host);
-      if (!normalized || seen.has(normalized.portalUrl)) return [];
-      seen.add(normalized.portalUrl);
-      const vendor = vendorForHostname(normalized.hostname);
-      return [{
-        ...normalized,
-        vendor,
-        vendorClaim: cleanText(row?.vendor, 80) || null,
-        tenantSlug: tenantForHostname(normalized.hostname, vendor),
-        why: cleanText(row?.why, 220) || "Returned by the web-search model.",
-      }];
-    }).slice(0, MAX_LLM_CANDIDATES);
+    const candidates = unique(rows.map((row) => slugify(typeof row === "string" ? row : row?.slug)))
+      .slice(0, MAX_LLM_CANDIDATES);
     return {
       candidates,
-      reason: `${candidates.length} web-search candidate${candidates.length === 1 ? "" : "s"} returned; each was independently probed.`,
+      reason: `${candidates.length} OpenRouter candidate${candidates.length === 1 ? "" : "s"} returned and merged with deterministic candidates.`,
     };
   } catch (error) {
     return {
       candidates: [],
-      reason: `Web-search discovery failed gracefully: ${failureReason(error)}`,
+      reason: `OpenRouter candidate generation failed gracefully: ${failureReason(error)}`,
     };
   }
 }
 
-async function probeVendor(vendor, slug) {
+export async function probeVendor(vendor, slug) {
   const url =
     vendor === "civicclerk"
       ? `https://${slug}.api.civicclerk.com/v1/Events?%24top=1`
-      : `https://webapi.legistar.com/v1/${slug}/events?%24top=1`;
+      : vendor === "primegov"
+        ? `https://${slug}.primegov.com/api/v2/PublicPortal/ListArchivedMeetings?year=${new Date().getFullYear()}`
+        : `https://webapi.legistar.com/v1/${slug}/events?%24top=1`;
   const attempt = { kind: "meetings", vendor, slug, url, verified: false };
   try {
     const { response, body } = await fetchJson(url);
@@ -442,24 +510,18 @@ async function probeVendor(vendor, slug) {
       attempt.reason = "HTTP 200, but the response was not the vendor's expected event list.";
       return attempt;
     }
-    if (!rows.length) {
-      attempt.reason = "HTTP 200, but the first page contained no sample event.";
-      return attempt;
-    }
     const sample =
       vendor === "civicclerk"
         ? rows[0]?.eventName || rows[0]?.categoryName
-        : rows[0]?.EventBodyName || rows[0]?.EventComment;
-    if (!cleanText(sample)) {
-      attempt.reason = "HTTP 200, but no event name was present to prove the response shape.";
-      return attempt;
-    }
+        : vendor === "primegov"
+          ? rows[0]?.title
+          : rows[0]?.EventBodyName || rows[0]?.EventComment;
     return {
       ...attempt,
       verified: true,
       evidence: {
         status: response.status,
-        sample: cleanText(sample, 180),
+        sample: cleanText(sample, 180) || "Verified tenant endpoint (no event returned on the first page).",
         firstPageRecords: rows.length,
       },
     };
@@ -539,7 +601,47 @@ async function probeDiscoveredPortal(candidate) {
   };
 }
 
-async function discoverArcgis(query) {
+/**
+ * A responding FeatureServer is not the same as the *right* FeatureServer.
+ * Keyword-only matching previously marked Chili_Parcels (a town in New York)
+ * as verified for Fishers, IN. A candidate must now name the target city or
+ * county in its title/snippet/owner, and the state must not contradict.
+ * Returning no parcel source is strictly better than returning a wrong one.
+ */
+function arcgisRelevance(item, context) {
+  const city = cleanText(context?.city, 80).toLowerCase();
+  const county = cleanText(context?.county, 120)
+    .toLowerCase()
+    .replace(/\s+county$/, "")
+    .trim();
+  const state = cleanText(context?.state, 2).toUpperCase();
+  const stateName = (STATE_NAME[state] || "").toLowerCase();
+  const haystack = [item?.title, item?.snippet, item?.owner, item?.description, ...(item?.tags || [])]
+    .map((value) => cleanText(value, 400).toLowerCase())
+    .join(" ");
+  if (!haystack) return { relevant: false, reason: "No title or description to match against." };
+
+  // Reject a service that names a different US state outright.
+  const named = Object.entries(STATE_ABBR).filter(
+    ([name]) => name.toLowerCase() !== stateName && new RegExp(`\\b${name.toLowerCase()}\\b`).test(haystack),
+  );
+  if (named.length && stateName && !haystack.includes(stateName))
+    return { relevant: false, reason: `Service references ${named[0][0]}, not ${STATE_NAME[state] || state}.` };
+
+  const cityHit = city.length > 2 && new RegExp(`\\b${city.replace(/[^a-z0-9 ]/g, "")}\\b`).test(haystack);
+  const countyHit = county.length > 2 && new RegExp(`\\b${county.replace(/[^a-z0-9 ]/g, "")}\\b`).test(haystack);
+  if (!cityHit && !countyHit)
+    return {
+      relevant: false,
+      reason: `Service does not name ${context?.city || "the city"} or ${context?.county || "its county"}; a responding endpoint is not proof it covers this jurisdiction.`,
+    };
+  return {
+    relevant: true,
+    matchedOn: cityHit ? `city name "${context.city}"` : `county name "${context.county}"`,
+  };
+}
+
+export async function discoverArcgis(query, context = {}) {
   const searchUrl = `https://www.arcgis.com/sharing/rest/search?q=${encodeURIComponent(query)}&f=json&num=8`;
   const searchAttempt = {
     kind: "parcels",
@@ -557,20 +659,29 @@ async function discoverArcgis(query) {
       return { searchAttempt, serviceAttempts: [] };
     }
     const seenServiceUrls = new Set();
+    const rejected = [];
     const candidates = body.results
       .filter((item) => {
         const serviceUrl = String(item?.url || "").replace(/\/$/, "");
-        const relevant =
+        const shaped =
           item?.type === "Feature Service" &&
           serviceUrl &&
-          /(parcel|property|cadastr|tax\s*lot|assessor)/i.test(
-            String(item?.title || ""),
-          ) &&
+          /(parcel|property|cadastr|tax\s*lot|assessor)/i.test(String(item?.title || "")) &&
           !seenServiceUrls.has(serviceUrl);
-        if (relevant) seenServiceUrls.add(serviceUrl);
-        return relevant;
+        if (!shaped) return false;
+        // Jurisdiction check happens before the service is ever probed.
+        const relevance = arcgisRelevance(item, context);
+        if (!relevance.relevant) {
+          if (rejected.length < 6)
+            rejected.push({ title: cleanText(item?.title, 120), reason: relevance.reason });
+          return false;
+        }
+        seenServiceUrls.add(serviceUrl);
+        item.__matchedOn = relevance.matchedOn;
+        return true;
       })
       .slice(0, MAX_ARCGIS_SERVICES);
+    searchAttempt.rejectedForJurisdiction = rejected;
     searchAttempt.verified = true;
     searchAttempt.evidence = {
       status: response.status,
@@ -614,6 +725,7 @@ async function discoverArcgis(query) {
               sample: cleanText(firstLayer?.name || item.title || "Feature service", 180),
               geometryType: cleanText(service.geometryType || firstLayer?.geometryType, 80) || null,
               layerCount: Array.isArray(service.layers) ? service.layers.length : 1,
+              jurisdictionMatch: item.__matchedOn || null,
             },
           };
         } catch (error) {
@@ -644,13 +756,13 @@ export async function discoverCity(cityValue, stateValue, countyValue) {
       code: "invalid_location",
     });
 
-  const cacheKey = `onboard:discover:v3:${state}:${slugify(city)}`;
+  const cacheKey = `onboard:discover:v4:${state}:${slugify(city)}`;
   const cacheDb = locateDb();
   try {
     const cached = readCache(cacheDb, cacheKey);
-    if (cached?.sources?.some((source) => source.kind === "meetings" && source.verified)) {
+    if (cached?.sources && cached?.discovery) {
       const meeting = cached.sources.find((source) => source.kind === "meetings" && source.verified);
-      const meetingsIngested = meeting?.slug && ["civicclerk", "legistar"].includes(meeting.vendor)
+      const meetingsIngested = meeting?.slug && ["civicclerk", "legistar", "primegov"].includes(meeting.vendor)
         ? cityMeetingStatus(city, meeting.vendor, meeting.slug).meetingsIngested
         : 0;
       return {
@@ -664,44 +776,37 @@ export async function discoverCity(cityValue, stateValue, countyValue) {
   }
 
   const proposal = deterministicProposal(city, state, county);
-  const arcgisPromise = discoverArcgis(proposal.arcgisQuery);
-  const [civicAttempts, legistarAttempts, arcgis] = await Promise.all([
-    Promise.all(
-      proposal.civicclerkSlugs.map((slug) =>
-        probeVendor("civicclerk", slug),
-      ),
-    ),
-    Promise.all(
-      proposal.legistarSlugs.map((slug) =>
-        probeVendor("legistar", slug),
-      ),
-    ),
-    arcgisPromise,
+  const llmProposal = await proposeTenantCandidates(city, state);
+  const candidates = unique([...proposal.candidates, ...llmProposal.candidates]).slice(0, MAX_CANDIDATES);
+  const [meetingAttempts, arcgis] = await Promise.all([
+    Promise.all(candidates.flatMap((slug) =>
+      ["legistar", "civicclerk", "primegov"].map((vendor) => probeVendor(vendor, slug))
+    )),
+    discoverArcgis(proposal.arcgisQuery, { city, state, county }),
   ]);
-  const patternAttempts = [...civicAttempts, ...legistarAttempts].map((attempt) => ({
+  const patternAttempts = meetingAttempts.map((attempt) => ({
     ...attempt,
-    discoveryPath: "pattern probe",
+    discoveryPath: "multi-hypothesis probe",
   }));
-  let verifiedMeetings = patternAttempts.filter((item) => item.verified);
-  let webSearch = {
-    candidates: [],
-    reason: "Skipped because a fast pattern probe already verified a meetings source.",
+  const verifiedMeetings = ["legistar", "civicclerk", "primegov"].flatMap((vendor) => {
+    const match = patternAttempts.find((item) => item.vendor === vendor && item.verified);
+    return match ? [match] : [];
+  });
+  const discoveryPath = verifiedMeetings.length ? "multi-hypothesis probe" : null;
+  const vendorSummary = (vendor) => {
+    const attempts = patternAttempts.filter((item) => item.vendor === vendor);
+    const verified = attempts.find((item) => item.verified);
+    if (verified) return `Tried ${candidates.length} candidate identifiers; verified ${vendor === "legistar" ? "Legistar" : "CivicClerk"} tenant '${verified.slug}'.`;
+    const blocked = attempts.find((item) => item.status === 403);
+    if (blocked) return `Tried ${candidates.length} candidate identifiers; tenant candidate '${blocked.slug}' exists but was blocked (HTTP 403).`;
+    if (attempts.length && attempts.every((item) => item.status == null))
+      return `Tried ${candidates.length} candidate identifiers; network errors prevented ${vendor === "legistar" ? "Legistar" : "CivicClerk"} verification.`;
+    const networkErrors = attempts.filter((item) => item.status == null).length;
+    return `No ${vendor === "legistar" ? "Legistar" : "CivicClerk"} tenant found after ${candidates.length} candidates tried${networkErrors ? `; ${networkErrors} network error${networkErrors === 1 ? "" : "s"}` : ""}.`;
   };
-  let webSearchAttempts = [];
-  if (!verifiedMeetings.length) {
-    webSearch = await searchMeetingPortals(city, state);
-    webSearchAttempts = await Promise.all(webSearch.candidates.map(probeDiscoveredPortal));
-    verifiedMeetings = webSearchAttempts.filter((item) => item.verified);
-  }
-
-  const discoveryPath = patternAttempts.some((item) => item.verified)
-    ? "pattern probe"
-    : verifiedMeetings.length
-      ? "web search"
-      : null;
   const verifiedParcels = arcgis.serviceAttempts.filter((item) => item.verified);
   const ingestibleMeeting = verifiedMeetings.find(
-    (item) => item.slug && ["civicclerk", "legistar"].includes(item.vendor),
+    (item) => item.slug && ["civicclerk", "legistar", "primegov"].includes(item.vendor),
   );
   const meetingsIngested = ingestibleMeeting
     ? cityMeetingStatus(city, ingestibleMeeting.vendor, ingestibleMeeting.slug).meetingsIngested
@@ -727,7 +832,6 @@ export async function discoverCity(cityValue, stateValue, countyValue) {
   ];
   const attempts = [
     ...patternAttempts,
-    ...webSearchAttempts,
     arcgis.searchAttempt,
     ...arcgis.serviceAttempts,
     {
@@ -753,46 +857,33 @@ export async function discoverCity(cityValue, stateValue, countyValue) {
     discovery: {
       path: discoveryPath,
       cacheHit: false,
-      candidatesTried: patternAttempts.length + webSearchAttempts.length,
-      patternCandidatesTried: patternAttempts.length,
-      webSearchCandidatesTried: webSearchAttempts.length,
-      webSearchSkipped: patternAttempts.some((item) => item.verified),
+      candidatesTried: candidates.length,
+      candidateIdentifiers: candidates,
+      endpointProbes: patternAttempts.length,
+      deterministicCandidates: proposal.candidates.length,
+      llmCandidates: llmProposal.candidates.length,
+      proposalReason: llmProposal.reason,
       evidence: verifiedMeetings[0]?.evidence || null,
     },
     steps: [
       {
         id: "propose",
-        label: "Generating fast pattern candidates",
+        label: "Generating tenant candidates",
         status: "complete",
-        detail: `${patternAttempts.length} CivicClerk and Legistar candidates generated without a model call.`,
+        detail: `${candidates.length} identifiers merged from deterministic rules and OpenRouter proposals; all were probed against both vendors.`,
       },
       step(
         "civicclerk",
         "Verifying CivicClerk tenants",
-        civicAttempts.some((item) => item.verified),
-        civicAttempts.some((item) => item.verified)
-          ? "A CivicClerk event endpoint returned a valid sample."
-          : "No proposed CivicClerk tenant passed the live probe.",
+        verifiedMeetings.some((item) => item.vendor === "civicclerk"),
+        vendorSummary("civicclerk"),
       ),
       step(
         "legistar",
         "Verifying Legistar tenants",
-        legistarAttempts.some((item) => item.verified),
-        legistarAttempts.some((item) => item.verified)
-          ? "A Legistar event endpoint returned a valid sample."
-          : "No proposed Legistar tenant passed the live probe.",
+        verifiedMeetings.some((item) => item.vendor === "legistar"),
+        vendorSummary("legistar"),
       ),
-      {
-        id: "web-search",
-        label: "Searching the web for an official meetings portal",
-        status: patternAttempts.some((item) => item.verified)
-          ? "skipped"
-          : verifiedMeetings.length
-            ? "verified"
-            : "not_found",
-        detail: webSearch.reason,
-        evidence: discoveryPath === "web search" ? verifiedMeetings[0]?.evidence : undefined,
-      },
       {
         id: "arcgis-search",
         label: "Searching ArcGIS for parcel layers",
@@ -825,37 +916,45 @@ export async function discoverCity(cityValue, stateValue, countyValue) {
     ingestible: Boolean(ingestibleMeeting),
     meetingsIngested,
   };
-  if (verifiedMeetings.length) {
-    const writeDb = locateDb();
-    try {
-      writeCache(writeDb, cacheKey, result);
-    } finally {
-      writeDb.close();
-    }
+  const writeDb = locateDb();
+  try {
+    writeCache(writeDb, cacheKey, result);
+  } finally {
+    writeDb.close();
   }
   return result;
 }
 
 function meetingDb() {
-  const db = new Database(dbPath);
-  db.pragma("journal_mode = WAL");
-  db.exec(`CREATE TABLE IF NOT EXISTS onboarded_meetings (
-    city TEXT NOT NULL,
-    vendor TEXT NOT NULL,
-    slug TEXT NOT NULL,
-    event_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    body TEXT,
-    start_datetime TEXT,
-    raw_json TEXT NOT NULL,
-    fetched_at TEXT NOT NULL,
-    PRIMARY KEY (city, vendor, slug, event_id)
-  )`);
+  // Schema (including city_slug/portal_url and the document + checkpoint
+  // tables) is owned by server/city.mjs so reads and writes cannot drift.
+  const db = openCityDb();
+  const columns = db.prepare("PRAGMA table_info(onboarded_meetings)").all();
+  if (!columns.some((column) => column.name === "city_slug"))
+    db.exec("ALTER TABLE onboarded_meetings ADD COLUMN city_slug TEXT");
+  if (!columns.some((column) => column.name === "portal_url"))
+    db.exec("ALTER TABLE onboarded_meetings ADD COLUMN portal_url TEXT");
+  ensureCache(db);
   return db;
 }
 
-async function fetchMeetingPages(vendor, slug) {
+async function fetchMeetingPages(vendor, slug, onProgress = () => {}) {
   const rows = [];
+  // PrimeGov has no offset paging — its public portal is indexed by calendar
+  // year, so walk backwards from this year until the archive runs dry.
+  if (vendor === "primegov") {
+    const thisYear = new Date().getFullYear();
+    for (let year = thisYear; year >= thisYear - 8; year -= 1) {
+      const { response, body } = await fetchJson(
+        `https://${slug}.primegov.com/api/v2/PublicPortal/ListArchivedMeetings?year=${year}`,
+        10_000,
+      );
+      if (!response.ok || !Array.isArray(body)) continue;
+      rows.push(...body.map((row) => ({ ...row, __year: year })));
+      onProgress({ fetched: rows.length });
+    }
+    return rows;
+  }
   let skip = 0;
   for (let page = 0; page < 200; page += 1) {
     const url =
@@ -877,6 +976,7 @@ async function fetchMeetingPages(vendor, slug) {
     if (!pageRows.length) return rows;
     rows.push(...pageRows);
     skip += pageRows.length;
+    onProgress({ fetched: rows.length });
   }
   throw Object.assign(new Error("Meeting pagination exceeded the safety limit."), {
     status: 502,
@@ -884,41 +984,53 @@ async function fetchMeetingPages(vendor, slug) {
   });
 }
 
-export async function ingestMeetings(vendorValue, slugValue, cityValue) {
+export async function ingestMeetings(vendorValue, slugValue, cityValue, options = {}) {
   const vendor = cleanText(vendorValue, 20).toLowerCase();
   const slug = slugify(slugValue);
   const city = cleanText(cityValue, 80);
-  if (!city || !slug || !["civicclerk", "legistar"].includes(vendor))
+  const state = cleanText(options.state, 40) || null;
+  const onProgress = typeof options.onProgress === "function" ? options.onProgress : () => {};
+  if (!city || !slug || !["civicclerk", "legistar", "primegov"].includes(vendor))
     throw Object.assign(new Error("A valid city, vendor, and slug are required."), {
       status: 400,
       code: "invalid_ingest_request",
     });
-  const rows = await fetchMeetingPages(vendor, slug);
+  const key = citySlug(city);
+  const rows = await fetchMeetingPages(vendor, slug, onProgress);
   const fetchedAt = new Date().toISOString();
   const normalized = rows
     .map((row) => {
-      const eventId = vendor === "civicclerk" ? row?.id : row?.EventId;
+      const eventId =
+        vendor === "civicclerk" || vendor === "primegov" ? row?.id : row?.EventId;
       const name =
         vendor === "civicclerk"
           ? row?.eventName || row?.categoryName
-          : row?.EventBodyName || row?.EventComment;
+          : vendor === "primegov"
+            ? row?.title
+            : row?.EventBodyName || row?.EventComment;
       if (eventId == null || !cleanText(name)) return null;
       return {
         city,
+        city_slug: key,
         vendor,
         slug,
         event_id: String(eventId),
+        portal_url: portalUrlFor(vendor, slug, eventId),
         name: cleanText(name, 300),
         body: cleanText(
           vendor === "civicclerk"
             ? row?.categoryName || row?.agendaName
-            : row?.EventBodyName,
+            : vendor === "primegov"
+              ? row?.title
+              : row?.EventBodyName,
           300,
         ),
         start_datetime: cleanText(
           vendor === "civicclerk"
             ? row?.startDateTime || row?.eventDate
-            : row?.EventDate,
+            : vendor === "primegov"
+              ? row?.dateTime
+              : row?.EventDate,
           80,
         ),
         raw_json: JSON.stringify(row),
@@ -927,20 +1039,26 @@ export async function ingestMeetings(vendorValue, slugValue, cityValue) {
     })
     .filter(Boolean);
   const db = meetingDb();
+  let summary = null;
   try {
     const upsert = db.prepare(`INSERT INTO onboarded_meetings
-      (city,vendor,slug,event_id,name,body,start_datetime,raw_json,fetched_at)
-      VALUES (@city,@vendor,@slug,@event_id,@name,@body,@start_datetime,@raw_json,@fetched_at)
+      (city,city_slug,vendor,slug,event_id,name,body,start_datetime,portal_url,raw_json,fetched_at)
+      VALUES (@city,@city_slug,@vendor,@slug,@event_id,@name,@body,@start_datetime,@portal_url,@raw_json,@fetched_at)
       ON CONFLICT(city,vendor,slug,event_id) DO UPDATE SET
-        name=excluded.name, body=excluded.body, start_datetime=excluded.start_datetime,
+        city_slug=excluded.city_slug, name=excluded.name, body=excluded.body,
+        start_datetime=excluded.start_datetime, portal_url=excluded.portal_url,
         raw_json=excluded.raw_json, fetched_at=excluded.fetched_at`);
     db.transaction((items) => items.forEach((item) => upsert.run(item)))(normalized);
+    // Publish the summary the app reads so onboarding stops being a dead end.
+    summary = rebuildCitySummary(db, key, { city, state, vendor, vendorSlug: slug });
   } finally {
     db.close();
   }
   return {
     city,
+    citySlug: key,
     ingested: normalized.length,
+    summary,
     sample: unique(normalized.map((item) => item.name)).slice(0, 3),
   };
 }
