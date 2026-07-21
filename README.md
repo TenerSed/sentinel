@@ -1,113 +1,147 @@
 # Sentinel — Resident Ally
 
-## Run it in 60 seconds (judges start here)
+**The intelligence developers pay lobbyists for—free for the residents they build next to.**
+
+Sentinel turns hard-to-use local-government records into a resident-facing civic intelligence product. Start with a city or address, then inspect nearby land-use cases, applicants, representatives, public opposition, outcomes, and the primary-record receipts behind each claim.
+
+Fishers, Indiana is the fully indexed reference city. Other cities can be discovered and onboarded, but Sentinel is explicit about the difference between verified source coverage and a deeply extracted civic graph: it never silently substitutes Fishers data for another place.
+
+## What it does
+
+- Connects a resident-facing address to parcels, zoning, and nearby development cases.
+- Shows case dossiers with applicants, representatives, precedent, documented public comment, outcomes, and links back to source material.
+- Preserves page-level document evidence and timestamped meeting-video cues.
+- Provides a map, tracker, civic-analysis terminal, and graph explorer over the reference corpus.
+- Supports optional Supabase accounts to save a resident profile and tracked cases across devices; browsing public records remains available without an account.
+- Uses a committed SQLite demo database and cached responses so the core demo does not depend on a live model call or a live graph database.
+
+## Trust model
+
+Sentinel is not a generic chatbot over civic content.
+
+- Public records, SQL, and Cypher are the authority for facts, counts, entities, and relationships.
+- Every meaningful claim should resolve to a public-document page or video timestamp.
+- The app leaves unavailable data visible rather than filling gaps with plausible claims. For example, it does not infer individual vote direction when the source does not provide it.
+- Model output is constrained to extraction or wording of supplied facts; it does not decide what happened in the public record.
+
+## Run locally
+
+### Requirements
+
+- Node.js 18+
+- A Supabase project for the current account/profile UI
+
+### Start the demo
 
 ```bash
 git clone https://github.com/TenerSed/sentinel.git
 cd sentinel
 npm install
+cp .env.example .env
+```
+
+Add these browser-safe Supabase values to `.env` (or `.env.local`):
+
+```bash
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
+```
+
+Then run:
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:5173](http://localhost:5173). The cached demo experience requires no Docker, Neo4j, or API keys. Neo4j and the extraction pipeline are optional and are needed only to rebuild the public-record data from scratch; the Analysis and Graph pages clearly identify that optional live layer when it is offline.
+Open [http://localhost:5173](http://localhost:5173). The included `data/demo.db` provides the offline reference-data path. Neo4j, public-record ingestion, and model-backed extraction are optional rebuild tooling—not prerequisites for the core local demo.
 
-> **The intelligence developers pay lobbyists for — free, for the residents they're building next to.**
+### Useful commands
 
-Sentinel is a multi-city civic-intelligence product that verifies the public systems used by any U.S. city, ingests what is available, and tells residents exactly how deep that city’s coverage goes. Fishers, Indiana is the fully indexed reference implementation—not the product identity or a silent fallback for other cities.
+```bash
+npm run build
+npm run demo
+npm run validate:contract
+npm run validate:seed
+npm run validate:chat
+npm run validate:curated
+npm run ingest:all
+npm run graph:up
+npm run graph:all
+```
 
-## The problem
+`npm run ingest:all` fetches Fishers source material into the local SQLite extraction database. `npm run graph:all` builds the deterministic Neo4j backbone; model extraction is a separate, optional step described in [scripts/graph/README.md](scripts/graph/README.md).
 
-A homeowner learns that something is being built nearby, then discovers the details are buried in a 200-page PDF posted three days before a 7 p.m. meeting. Developers and repeat applicants know the process, the people, and the history. Residents usually do not.
+## Demo path
 
-That information asymmetry is the product insight behind Sentinel. It connects an address to nearby cases, explains what a proposal means, shows who is behind it and their local track record, names documented support or opposition, and links every important claim back to a document page or meeting-video timestamp.
+For the shortest walkthrough:
 
-## Reference implementation
+1. Open `/` and choose Fishers, IN—the fully indexed reference city.
+2. Search an address or open a nearby case.
+3. Follow a case dossier to its supporting document or meeting-video receipt.
+4. Open `/terminal` to inspect computed patterns and entity dossiers.
+5. Open `/graph` to show the structured and open-schema civic graph.
 
-Fishers, IN is Sentinel’s fully indexed reference city. Its current corpus includes:
-
-- 184 CivicClerk meetings and 167 text documents containing 20,416,646 characters
-- 38,915 Hamilton County parcels
-- 100 City of Fishers YouTube transcripts containing 72,063 timestamped cues
-- 35 zoning districts and overlays
-- A structured graph of `Case`, `Person`, `Organization`, `Parcel`, `ZoningDistrict`, `Meeting`, and `Document` records
-- An open discovery layer with 61,796 `OpenEntity` nodes, 168,634 relationships, 4,488 distinct dynamic labels, and 75,659 `MENTIONED_IN` grounding edges
-- 169 cases with a recorded outcome; boards approve approximately 81–86% of decided land-use cases
-- Precomputed SQLite responses served in approximately 2–100 ms
-
-## Why you can't just ask ChatGPT
-
-A general chatbot has not read this local record. It cannot reliably cross-reference thousands of meeting documents, parcels, zoning records, and transcript cues; it may hallucinate a vote; and it gives a resident no receipt they can take to a public meeting.
-
-Sentinel's moat is the ingestion pipeline, knowledge graph, and evidence grounding—not the model. **Every number is computed by Cypher or SQL.** The LLM only phrases facts it is supplied, cites case numbers, and never invents a result.
+See [DEMO.md](DEMO.md) for the timed three-minute narration.
 
 ## Architecture
 
 ```text
-CivicClerk + YouTube + parcels + zoning GIS
-                    |
-             ingestion scripts
-                    |
-          SQLite (data/fishers.db)
-                    |
-              LLM extraction
-                    |
-          Neo4j knowledge graph
-                    |
-       precomputed snapshot cache
-                    |
-            Node server + Vite UI
+CivicClerk + public meeting video + parcels + zoning GIS
+                         |
+                  ingestion scripts
+                         |
+            SQLite source/extraction database
+                         |
+      deterministic graph backbone + optional LLM extraction
+                         |
+                  Neo4j civic graph
+                         |
+           precomputed SQLite snapshot/cache
+                         |
+               Node server + Vite React UI
 ```
 
-The structured graph supports dependable civic questions; the open/dynamic graph preserves concepts that do not fit a fixed schema. Grounding edges always lead back to the underlying public record.
+The graph uses a constrained civic schema for core entities such as `Case`, `Person`, `Organization`, `Parcel`, `ZoningDistrict`, `Meeting`, and `Document`. An open-schema extraction layer can retain important concepts that do not fit the fixed ontology, but each extracted entity remains grounded to its source document.
 
-City onboarding verifies CivicClerk, Granicus/Legistar, PrimeGov, and NovusAgenda meeting systems; Esri ArcGIS parcel/zoning services; and public YouTube meeting video. Newly connected cities display only their own verified and ingested totals. For example, the included onboarding database contains 4,652 San Jose, CA Legistar meetings, while Fishers-only cases, documents, video, and graph data remain explicitly labeled as reference-city data.
+## How we used GPT-5.6
 
-## Quickstart
+GPT-5.6 is an optional, bounded part of the offline pipeline—not the authority behind resident-facing facts.
 
-### Prerequisites
+- **Provenance-linked extraction:** with `LLM_PROVIDER=openai` and `OPENAI_MODEL=gpt-5.6`, the graph extractor processes document or transcript chunks into strict JSON entities and relationships. It only permits the civic labels and relationships the application recognizes, and records source IDs plus character offsets or video times.
+- **Open-schema discovery:** a separate extraction pass captures civic concepts that the fixed graph schema cannot anticipate, while grounding every emitted entity back to a source document.
+- **Explicit decision extraction:** the minutes pass extracts only stated agenda outcomes, vote tallies, movers, seconders, and documented opposition.
+- **Fact-bounded narration:** when enabled for offline snapshot work, model prompts receive computed fact packets and must only rephrase supplied names, numbers, and case identifiers. The normal demo request path does not wait on a model call.
 
-- Node.js 18 or newer
-- Docker with Docker Compose
-- Poppler: `brew install poppler`
-- `yt-dlp` installed in the project's `.venv`
+Structured outputs, checkpointed extraction logs, source locators, and deterministic SQL/Cypher checks are the guardrails. Sentinel prefers a missing fact to a model-generated one.
 
-Then run, in order:
+## How we used Codex
 
-```bash
-npm install
-cp .env.example .env
-# Edit .env and add the credentials you intend to use.
-npm run graph:up
-npm run snapshot
-npm run dev
-```
+Codex accelerated the build while the product team retained the important civic and product decisions: which public records to trust, the evidence-first rule, Fishers as the reference city, the graph schema, and what the demo should prove.
 
-Open [http://localhost:5173](http://localhost:5173).
+Codex was used to:
 
-The judging bundle ships with a prebuilt snapshot cache in `data/demo.db`, so `npm run snapshot` may be skipped for the fastest demo path. Rebuilding snapshots requires the already-ingested `data/fishers.db` extraction database and populated Neo4j graph; it does not re-ingest the public corpus. The app keeps live provider calls off the request path and serves precomputed results during the demo.
+- Scaffold and iterate the Node/Vite application, data contracts, and demo-safe cache path.
+- Build and refactor the ingestion adapters for CivicClerk records, public YouTube captions, parcel data, and zoning GIS.
+- Implement the provenance-carrying graph pipeline, extraction schemas, checkpointing, validation scripts, and deterministic fallback behavior.
+- Build the resident dashboard, case dossier, map, tracker, terminal, graph explorer, and source-aware empty/failure states.
+- Add Supabase authentication/profile plumbing and iterate on responsive, keyboard-accessible UI states.
+- Run type checks, build checks, source-contract checks, and targeted regression scripts as the implementation evolved.
 
-## Three-minute product tour
-
-- [`/`](http://localhost:5173/) — resident home, address lookup, proof statistics, and record highlights
-- [`/onboarding`](http://localhost:5173/onboarding) — choose any city, verify its public sources, and save the selected-city state
-- [`/map`](http://localhost:5173/map) — interactive, status-colored land-use map
-- [`/case?case=RZ-26-1`](http://localhost:5173/case?case=RZ-26-1) — flagship Story Cottage memory-care case, track records, public comment, and receipts
-- [`/terminal`](http://localhost:5173/terminal) — professional civic terminal with dossiers, power map, and win rates
-- [`/graph`](http://localhost:5173/graph) — structured and dynamic knowledge-graph explorer
-- [`/feed`](http://localhost:5173/feed) — original cited civic feed
-
-For a timed walkthrough, see [DEMO.md](DEMO.md).
+The model and Codex were used to make the pipeline and interface faster to build; the project’s credibility still comes from public records, explicit source links, and deterministic verification.
 
 ## Limitations
 
-- The public CivicClerk API does not expose structured agenda-item or vote-direction data, so per-member vote direction is unavailable.
-- 169 cases have a recorded outcome; cases without one are not treated as approved or denied.
-- One scanned minutes PDF still requires OCR.
-- Person and organization entity resolution still contains duplicates.
-- The map covers the 35 cases whose parcels resolve to geometry.
+- Fishers is the only deeply indexed reference city in the bundled demo.
+- The public CivicClerk API does not expose complete structured agenda-item or per-member vote-direction data.
+- Some public PDFs are scanned and require OCR before they can be fully extracted.
+- Entity resolution can still leave duplicate people or organizations across inconsistent public records.
+- The map only renders cases whose parcels resolve to usable geometry.
+- Supabase profile synchronization requires a configured project and the expected `profiles` table; the UI falls back to local browser storage if that table is unavailable.
 
-Sentinel prefers a missing answer over an invented claim.
+## Source considerations
 
-## AI and build credit
+Government records are public but may be corrected, removed, delayed, incomplete, or published in inaccessible formats. Sentinel labels its reference-city depth, retains source attribution, and does not treat a missing public record as proof that something did not happen.
 
-This project was built with OpenAI Codex. OpenRouter is the only runtime model provider. Model work is limited to offline extraction and bounded onboarding candidate proposals; normal dashboard, case, map, tracker, analysis, and graph request paths use precomputed data. Cypher and SQL remain the authority for facts and counts.
+## License
+
+MIT. See [LICENSE](LICENSE).
